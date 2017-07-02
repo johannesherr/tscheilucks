@@ -165,18 +165,18 @@ public class Scanner {
 	}
 
 	private void addToken(TokenType type) {
-		consume();
-		tokens.add(new Token(type, null, null, line));
+		char c = consume();
+		tokens.add(new Token(type, String.valueOf(c), null, line));
 	}
 
 	private void addDblToken(TokenType simple, char next, TokenType dbl) {
-		consume();
+		char c1 = consume();
 		Token token;
 		if (match(next)) {
-			consume();
-			token = new Token(dbl, null, null, line);
+			char c2 = consume();
+			token = new Token(dbl, c1 + "" + c2, null, line);
 		} else {
-			token = new Token(simple, null, null, line);
+			token = new Token(simple, String.valueOf(c1), null, line);
 		}
 		tokens.add(token);
 	}
