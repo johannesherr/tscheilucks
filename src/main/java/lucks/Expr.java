@@ -21,7 +21,10 @@ public abstract class Expr {
 		public <T> T accept(Visitor<T> visitor) {
 			return visitor.visitBinary(this);
 		}
-	}
+
+		@Override
+		public String toString() {
+			return "Binary{" + "left=" + left + ", " + "operator=" + operator + ", " + "right=" + right + "}";}	}
 
 	public static class Unary extends Expr {
 		final Token operator;
@@ -35,7 +38,10 @@ public abstract class Expr {
 		public <T> T accept(Visitor<T> visitor) {
 			return visitor.visitUnary(this);
 		}
-	}
+
+		@Override
+		public String toString() {
+			return "Unary{" + "operator=" + operator + ", " + "expr=" + expr + "}";}	}
 
 	public static class Literal extends Expr {
 		final Object value;
@@ -47,7 +53,10 @@ public abstract class Expr {
 		public <T> T accept(Visitor<T> visitor) {
 			return visitor.visitLiteral(this);
 		}
-	}
+
+		@Override
+		public String toString() {
+			return "Literal{" + "value=" + value + "}";}	}
 
 	public static class Grouping extends Expr {
 		final Expr expr;
@@ -59,6 +68,9 @@ public abstract class Expr {
 		public <T> T accept(Visitor<T> visitor) {
 			return visitor.visitGrouping(this);
 		}
-	}
+
+		@Override
+		public String toString() {
+			return "Grouping{" + "expr=" + expr + "}";}	}
 
 }

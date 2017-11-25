@@ -94,8 +94,19 @@ public class GenExpr {
 											              "\n" +
 											              "\t\tpublic <T> T accept(Visitor<T> visitor) {\n" +
 											              "\t\t\treturn visitor.visit%1$s(this);\n" +
-											              "\t\t}\n" +
-											              "\t}\n", clazz.name));
+											              "\t\t}\n", clazz.name) +
+
+											(String.format("\n" +
+															               "\t\t@Override\n" +
+															               "\t\tpublic String toString() {\n" +
+															               "\t\t\treturn \"%s{\" + %s + \"}\";}",
+											               clazz.name,
+											               clazz.fields.stream()
+															               .map(f -> String.format("\"%s=\" + %s", f.name, f.name))
+															               .collect(Collectors.joining(" + \", \" + "))))
+
+			        + "\t}\n"
+			);
 		}
 
 		return Joiner.on("\n").join(clsStrs);

@@ -16,7 +16,6 @@ public class Lox {
 
 	private static boolean hadError;
 
-	// 21:28-
 	public static void main(String[] args) throws IOException {
 		if (args.length > 1) {
 			System.out.println("Usage: jlox [script]");
@@ -46,10 +45,10 @@ public class Lox {
 	private static void run(String content) {
 		Scanner sc = new Scanner(content);
 		List<Token> tokens = sc.scanTokens();
+		Parser parser = new Parser(tokens);
 
-		for (Token token : tokens) {
-			System.out.println(token);
-		}
+		Expr expr = parser.parse();
+		System.out.println(expr);
 	}
 
 	static void error(int line, String msg) {
