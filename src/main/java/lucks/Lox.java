@@ -21,6 +21,7 @@ public class Lox {
 	private static boolean hadRuntimeError;
 
 	public static void main(String[] args) throws IOException {
+		args = new String[]{"script.txt"};
 		if (args.length > 1) {
 			System.out.println("Usage: jlox [script]");
 		} else if (args.length == 1) {
@@ -52,18 +53,19 @@ public class Lox {
 		List<Token> tokens = sc.scanTokens();
 		if (hadError) return;
 
+		hadError = false;
 		Parser parser = new Parser(tokens);
-		Expr expr = parser.parse();
+		List<Stmt> stmts = parser.parse();
 		if (hadError) return;
 
 		hadError = false;
-		interpreter.interpret(expr);
+		interpreter.interpret(stmts);
 	}
-	
+
 	static void error(int line, String msg) {
 		report(line, "", msg);
 	}
-
+	
 	static void error(Token token, String msg) {
 		String details = token.getType() == TokenType.EOF ? " at end" : " at '" + token.getLexeme() + "'";
 		report(token.getLine(), details, msg);

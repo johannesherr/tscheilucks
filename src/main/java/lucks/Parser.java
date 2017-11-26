@@ -3,6 +3,7 @@ package lucks;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,16 +42,45 @@ public class Parser {
 	}
 
 
-	public Expr parse() {
-		try {
-			Expr expr = parseExpr(0);
-			if (!match(TokenType.EOF)) throw error(peek(), "there are unparsed tokens remaining");
-			return expr;
-		} catch (ParseError error) {
-			return null;
+	public List<Stmt> parse() {
+		List<Stmt> program = new LinkedList<>();
+		while (!isAtEnd()) {
+			try {
+				program.add(parseStmt());
+			} catch (ParseError error) {
+				synchronize();
+			}
+		}
+		if (!isAtEnd()) {
+			throw error(peek(), "there are unparsed tokens remaining");
+		}
+		return program;
+	}
+
+	private Stmt parseStmt() {
+		if (match(TokenType.PRINT)) {
+			return parsePrintStmt();
+		} else {
+			return parseExprStmt();
 		}
 	}
-	
+
+	private Stmt.Expression parseExprStmt() {
+		Expr expr = parseExpr();
+		consume(TokenType.SEMICOLON);
+		return new Stmt.Expression(expr);
+	}
+
+	private Stmt parsePrintStmt() {
+		Expr expr = parseExpr();
+		consume(TokenType.SEMICOLON);
+		return new Stmt.Print(expr);
+	}
+
+	private Expr parseExpr() {
+		return parseExpr(0);
+	}
+
 	private Expr parseExpr(int priority) {
 		Expr expr = unary();
 
@@ -87,12 +117,12 @@ public class Parser {
 		throw error(peek(), "Expression expected.");
 	}
 
-	private Token consume(TokenType rightBrace) {
-		if (match(rightBrace)) {
+	private Token consume(TokenType tokenType) {
+		if (match(tokenType)) {
 			return previous();
 		} else {
 			throw error(peek(), String.format("expected %s, but was %s",
-			                                  rightBrace,
+			                                  tokenType,
 			                                  peek().getType()));
 		}
 	}
@@ -128,7 +158,7 @@ public class Parser {
 	}
 
 	private boolean isAtEnd() {
-		return current == tokens.size();
+		return current == tokens.size() - 1;
 	}
 
 	private Token peek() {

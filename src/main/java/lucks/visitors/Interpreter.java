@@ -1,14 +1,16 @@
 package lucks.visitors;
 
+import java.util.List;
 import java.util.Objects;
 
 import lucks.Expr;
-import lucks.Lox;
 import lucks.RuntimeError;
+import lucks.Stmt;
 import lucks.Token;
 import lucks.TokenType;
 
-public class Interpreter implements Expr.Visitor<Object> {
+public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+
 	@Override
 	public Object visitBinary(Expr.Binary expr) {
 		Object left = expr.left.accept(this);
@@ -90,12 +92,26 @@ public class Interpreter implements Expr.Visitor<Object> {
 		return expr.expr.accept(this);
 	}
 
-	public void interpret(Expr expr) {
-		try {
-			System.out.println(stringify(evaluate(expr)));
-		} catch (RuntimeError error) {
-			Lox.runtimeError(error);
+	@Override
+	public Void visitExpression(Stmt.Expression stmt) {
+		evaluate(stmt.expression);
+		return null;
+	}
+
+	@Override
+	public Void visitPrint(Stmt.Print stmt) {
+		System.out.println(stringify(evaluate(stmt.expression)));
+		return null;
+	}
+
+	public void interpret(List<Stmt> stmts) {
+		for (Stmt stmt : stmts) {
+			execute(stmt);
 		}
+	}
+
+	private void execute(Stmt stmt) {
+		stmt.accept(this);
 	}
 	
 	private String stringify(Object input) {

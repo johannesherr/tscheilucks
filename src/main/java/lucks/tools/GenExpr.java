@@ -51,7 +51,7 @@ public class GenExpr {
 						"\n" +
 						"\tpublic interface Visitor<T> {\n" +
 						(exprClasses.stream()
-										.map(c -> String.format("\t\tT visit%1$s(" + clazzName + ".%1$s expr);\n", c.name))
+										.map(c -> String.format("\t\tT visit%1$s(" + clazzName + ".%1$s " + clazzName.toLowerCase() + ");\n", c.name))
 										.collect(Collectors.joining(""))) +
 						"\t}\n";
 

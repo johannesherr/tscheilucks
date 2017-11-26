@@ -40,7 +40,7 @@ public abstract class Stmt {
 
 
 	public interface Visitor<T> {
-		T visitExpression(Stmt.Expression expr);
-		T visitPrint(Stmt.Print expr);
+		T visitExpression(Stmt.Expression stmt);
+		T visitPrint(Stmt.Print stmt);
 	}
 }
