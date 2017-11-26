@@ -1,5 +1,7 @@
 package lucks;
 
+import static lucks.TokenType.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,10 +17,10 @@ public class Parser {
 	private static final Map<TokenType, Integer> priorities = new HashMap<>();
 	static {
 		TokenType[][] pdef = {
-						{TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL},
-						{TokenType.LESS, TokenType.LESS_EQUAL, TokenType.GREATER_EQUAL, TokenType.GREATER},
-						{TokenType.MINUS, TokenType.PLUS},
-						{TokenType.STAR, TokenType.SLASH},
+						{EQUAL_EQUAL, BANG_EQUAL},
+						{LESS, LESS_EQUAL, GREATER_EQUAL, GREATER},
+						{MINUS, PLUS},
+						{STAR, SLASH},
 						// grouping
 		};
 
@@ -45,10 +47,9 @@ public class Parser {
 	public List<Stmt> parse() {
 		List<Stmt> program = new LinkedList<>();
 		while (!isAtEnd()) {
-			try {
-				program.add(parseStmt());
-			} catch (ParseError error) {
-				synchronize();
+			Stmt stmt = declaration();
+			if (stmt != null) {
+				program.add(stmt);
 			}
 		}
 		if (!isAtEnd()) {
@@ -57,8 +58,33 @@ public class Parser {
 		return program;
 	}
 
-	private Stmt parseStmt() {
-		if (match(TokenType.PRINT)) {
+	private Stmt declaration() {
+		try {
+			if (match(VAR)) {
+				return varDeclaration();
+			} else {
+				return statement();
+			}
+		} catch (ParseError error) {
+			synchronize();
+			return null;
+		}
+	}
+
+	private Stmt varDeclaration() {
+		Token name = consume(IDENTIFIER);
+
+		Expr initializer = null;
+		if (match(EQUAL)) {
+			initializer = expression();
+		}
+
+		consume(SEMICOLON);
+		return new Stmt.Var(name, initializer);
+	}
+
+	private Stmt statement() {
+		if (match(PRINT)) {
 			return parsePrintStmt();
 		} else {
 			return parseExprStmt();
@@ -66,52 +92,56 @@ public class Parser {
 	}
 
 	private Stmt.Expression parseExprStmt() {
-		Expr expr = parseExpr();
-		consume(TokenType.SEMICOLON);
+		Expr expr = expression();
+		consume(SEMICOLON);
 		return new Stmt.Expression(expr);
 	}
 
 	private Stmt parsePrintStmt() {
-		Expr expr = parseExpr();
-		consume(TokenType.SEMICOLON);
+		Expr expr = expression();
+		consume(SEMICOLON);
 		return new Stmt.Print(expr);
 	}
 
-	private Expr parseExpr() {
-		return parseExpr(0);
+	private Expr expression() {
+		return expression(0);
 	}
 
-	private Expr parseExpr(int priority) {
+	private Expr expression(int priority) {
 		Expr expr = unary();
 
 		while (peekType(ops)) {
 			Integer nextPrio = priorities.get(peek().getType());
 			if (nextPrio <= priority) break;
 
-			expr = new Expr.Binary(expr, advance(), parseExpr(nextPrio));
+			expr = new Expr.Binary(expr, advance(), expression(nextPrio));
 		}
 
 		return expr;
 	}
 
 	private Expr unary() {
-		if (match(TokenType.BANG, TokenType.MINUS)) return new Expr.Unary(previous(), unary());
+		if (match(BANG, MINUS)) return new Expr.Unary(previous(), unary());
 		return primary();
 	}
 
 	private Expr primary() {
-		if (match(TokenType.TRUE)) return new Expr.Literal(true);
-		if (match(TokenType.FALSE)) return new Expr.Literal(false);
-		if (match(TokenType.NIL)) return new Expr.Literal(null);
+		if (match(TRUE)) return new Expr.Literal(true);
+		if (match(FALSE)) return new Expr.Literal(false);
+		if (match(NIL)) return new Expr.Literal(null);
 
-		if (match(TokenType.NUMBER, TokenType.STRING)) {
+		if (match(NUMBER, STRING)) {
 			return new Expr.Literal(previous().getLiteral());
 		}
 
-		if (match(TokenType.LEFT_BRACE)) {
-			Expr expr = parseExpr(0);
-			consume(TokenType.RIGHT_BRACE);
+		if (match(LEFT_BRACE)) {
+			Expr expr = expression(0);
+			consume(RIGHT_BRACE);
 			return new Expr.Grouping(expr);
+		}
+
+		if (match(IDENTIFIER)) {
+			return new Expr.Variable(previous());
 		}
 
 		throw error(peek(), "Expression expected.");
@@ -171,16 +201,16 @@ public class Parser {
 
 	public void synchronize() {
 		HashSet<TokenType> target = Sets.newHashSet(
-						TokenType.CLASS,
-						TokenType.FUN,
-						TokenType.VAR,
-						TokenType.FOR,
-						TokenType.IF,
-						TokenType.WHILE,
-						TokenType.PRINT,
-						TokenType.RETURN
+						CLASS,
+						FUN,
+						VAR,
+						FOR,
+						IF,
+						WHILE,
+						PRINT,
+						RETURN
 		);
-		while (!isAtEnd() && (previous().getType() != TokenType.SEMICOLON || !target.contains(peek().getType()))) {
+		while (!isAtEnd() && (previous().getType() != SEMICOLON || !target.contains(peek().getType()))) {
 			advance();
 		}
 	}

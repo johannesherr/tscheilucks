@@ -3,6 +3,7 @@ package lucks.visitors;
 import java.util.List;
 import java.util.Objects;
 
+import lucks.Environment;
 import lucks.Expr;
 import lucks.RuntimeError;
 import lucks.Stmt;
@@ -10,6 +11,8 @@ import lucks.Token;
 import lucks.TokenType;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+
+	private final Environment environment = new Environment();
 
 	@Override
 	public Object visitBinary(Expr.Binary expr) {
@@ -88,6 +91,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	}
 
 	@Override
+	public Object visitVariable(Expr.Variable expr) {
+		return environment.get(expr.name);
+	}
+
+	@Override
 	public Object visitGrouping(Expr.Grouping expr) {
 		return expr.expr.accept(this);
 	}
@@ -101,6 +109,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	@Override
 	public Void visitPrint(Stmt.Print stmt) {
 		System.out.println(stringify(evaluate(stmt.expression)));
+		return null;
+	}
+
+	@Override
+	public Void visitVar(Stmt.Var stmt) {
+		Object value = null;
+		if (stmt.initializer != null) {
+			value = evaluate(stmt.initializer);
+		}
+
+		environment.define(stmt.name.getLexeme(), value);
 		return null;
 	}
 

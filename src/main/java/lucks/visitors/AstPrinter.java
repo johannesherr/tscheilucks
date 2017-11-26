@@ -25,6 +25,11 @@ public class AstPrinter implements Expr.Visitor<String> {
 	}
 
 	@Override
+	public String visitVariable(Expr.Variable expr) {
+		return expr.name.getLexeme();
+	}
+
+	@Override
 	public String visitGrouping(Expr.Grouping expr) {
 		return String.format("(group %s)", expr.expr.accept(new AstPrinter()));
 	}

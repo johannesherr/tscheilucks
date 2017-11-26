@@ -38,9 +38,29 @@ public abstract class Stmt {
 		}
 	}
 
+	public static class Var extends Stmt {
+		public final Token name;
+		public final Expr initializer;
+
+		public Var(Token name, Expr initializer) {
+			this.name = name;
+			this.initializer = initializer;
+		}
+
+		public <T> T accept(Stmt.Visitor<T> visitor) {
+			return visitor.visitVar(this);
+		}
+
+		@Override
+		public String toString() {
+			return "Var{" + "name=" + name + ", " + "initializer=" + initializer + "}";
+		}
+	}
+
 
 	public interface Visitor<T> {
 		T visitExpression(Stmt.Expression stmt);
 		T visitPrint(Stmt.Print stmt);
+		T visitVar(Stmt.Var stmt);
 	}
 }

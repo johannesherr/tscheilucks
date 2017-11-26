@@ -24,12 +24,14 @@ public class GenExpr {
 						"Binary: Expr left, Token operator, Expr right",
 						"Unary: Token operator, Expr expr",
 						"Literal: Object value",
+						"Variable: Token name",
 						"Grouping: Expr expr"
 		));
 
 		List<Clazz> stmtClasses = createAST("Stmt", asList(
 						"Expression: Expr expression",
-						"Print: Expr expression"
+						"Print: Expr expression",
+						"Var: Token name, Expr initializer"
 		));
 	}
 

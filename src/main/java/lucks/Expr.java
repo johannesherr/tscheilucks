@@ -61,6 +61,23 @@ public abstract class Expr {
 		}
 	}
 
+	public static class Variable extends Expr {
+		public final Token name;
+
+		public Variable(Token name) {
+			this.name = name;
+		}
+
+		public <T> T accept(Expr.Visitor<T> visitor) {
+			return visitor.visitVariable(this);
+		}
+
+		@Override
+		public String toString() {
+			return "Variable{" + "name=" + name + "}";
+		}
+	}
+
 	public static class Grouping extends Expr {
 		public final Expr expr;
 
@@ -83,6 +100,7 @@ public abstract class Expr {
 		T visitBinary(Expr.Binary expr);
 		T visitUnary(Expr.Unary expr);
 		T visitLiteral(Expr.Literal expr);
+		T visitVariable(Expr.Variable expr);
 		T visitGrouping(Expr.Grouping expr);
 	}
 }

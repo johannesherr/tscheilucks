@@ -1,3 +1,5 @@
 print "one";
 print true;
 print 2 + 1;
+var xyz = 10 + 31;
+print xyz;
