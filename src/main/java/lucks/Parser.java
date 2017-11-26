@@ -2,10 +2,12 @@ package lucks;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class Parser {
 
@@ -40,9 +42,13 @@ public class Parser {
 
 
 	public Expr parse() {
-		return parseExpr(0);
+		try {
+			return parseExpr(0);
+		} catch (ParseError error) {
+			return null;
+		}
 	}
-
+	
 	private Expr parseExpr(int priority) {
 		Expr expr = unary();
 
@@ -76,19 +82,24 @@ public class Parser {
 			return new Expr.Grouping(expr);
 		}
 
-		throw new AssertionError("unexpected token: " + peek());
+		throw error(peek(), "Expression expected.");
 	}
 
 	private Token consume(TokenType rightBrace) {
-		if (!match(rightBrace)) {
-			throw new AssertionError(String.format("expected %s, but was %s",
-			                                       rightBrace,
-			                                       peek().getType()));
-		} else {
+		if (match(rightBrace)) {
 			return previous();
+		} else {
+			throw error(peek(), String.format("expected %s, but was %s",
+			                                  rightBrace,
+			                                  peek().getType()));
 		}
 	}
-	
+
+	private ParseError error(Token token, String msg) {
+		Lox.error(token, msg);
+		return new ParseError(token, msg);
+	}
+
 	private boolean match(TokenType... types) {
 		boolean ret = peekType(types);
 		if (ret) advance();
@@ -124,5 +135,21 @@ public class Parser {
 
 	private Token previous() {
 		return tokens.get(current - 1);
+	}
+
+	public void synchronize() {
+		HashSet<TokenType> target = Sets.newHashSet(
+						TokenType.CLASS,
+						TokenType.FUN,
+						TokenType.VAR,
+						TokenType.FOR,
+						TokenType.IF,
+						TokenType.WHILE,
+						TokenType.PRINT,
+						TokenType.RETURN
+		);
+		while (!isAtEnd() && (previous().getType() != TokenType.SEMICOLON || !target.contains(peek().getType()))) {
+			advance();
+		}
 	}
 }

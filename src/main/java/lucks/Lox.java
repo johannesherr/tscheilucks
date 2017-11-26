@@ -48,13 +48,20 @@ public class Lox {
 		Parser parser = new Parser(tokens);
 
 		Expr expr = parser.parse();
-		System.out.println(expr);
-	}
+		if (hadError) return;
 
+		System.out.println(expr.accept(new AstPrinter()));
+	}
+	
 	static void error(int line, String msg) {
 		report(line, "", msg);
 	}
 
+	static void error(Token token, String msg) {
+		String details = token.getType() == TokenType.EOF ? " at end" : " at '" + token.getLexeme() + "'";
+		report(token.getLine(), details, msg);
+	}
+	
 	private static void report(int line, String where, String msg) {
 		System.err.println(String.format("[line %,d] Error%s: %s", line, where, msg));
 		hadError = true;
