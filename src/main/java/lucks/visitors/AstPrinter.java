@@ -6,7 +6,7 @@ import lucks.Expr;
 /**
  * @author Johannes Herr
  */
-public class AstPrinter implements Visitor<String> {
+public class AstPrinter implements Expr.Visitor<String> {
 	@Override
 	public String visitBinary(Expr.Binary expr) {
 		return String.format("(%s %s %s)", expr.operator.getLexeme(),

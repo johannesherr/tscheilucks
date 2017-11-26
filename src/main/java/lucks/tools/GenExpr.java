@@ -19,45 +19,46 @@ public class GenExpr {
 
 	// 17:38-
 	public static void main(String[] args) throws IOException {
-		List<String> def = asList(
+		String clazzName = "Expr";
+		List<Clazz> exprClasses = createAST(clazzName, asList(
 						"Binary: Expr left, Token operator, Expr right",
 						"Unary: Token operator, Expr expr",
 						"Literal: Object value",
 						"Grouping: Expr expr"
-		);
-		List<Clazz> clazzes = parseDef(def);
+		));
 
-		String code = "package lucks;\n" +
+		List<Clazz> stmtClasses = createAST("Stmt", asList(
+						"Expression: Expr expression",
+						"Print: Expr expression"
+		));
+	}
+
+	private static List<Clazz> createAST(String clazzName, List<String> def) throws IOException {
+		List<Clazz> exprClasses = parseDef(def);
+
+		String clazzTemplate = "package lucks;\n" +
 						"\n" +
-						"import lucks.visitors.Visitor;\n" +
-						"\n" +
-						"/**\n" +
-						" * @author Johannes Herr\n" +
-						" */\n" +
-						"public abstract class Expr {\n" +
+						"public abstract class %1$s {\n" +
 						"\t\n" +
-						"\tpublic abstract <T> T accept(Visitor<T> visitor);\n" +
+						"\tpublic abstract <T> T accept(%1$s.Visitor<T> visitor);\n" +
 						"\n" +
-						classes(clazzes) +
+						classes(exprClasses) +
 						"\n" +
+						"%2$s" +
 						"}\n";
 
-		Files.write(Paths.get("src/main/java/lucks/Expr.java"), code.getBytes(StandardCharsets.UTF_8));
-
-		String codeVisitor = "package lucks.visitors;\n" +
+		String codeVisitor =
 						"\n" +
-						"import lucks.Expr;\n" +
-						"\n" +
-						"/**\n" +
-						" * @author Johannes Herr\n" +
-						" */\n" +
-						"public interface Visitor<T> {\n" +
-						(clazzes.stream()
-						.map(c -> String.format("\tT visit%1$s(Expr.%1$s expr);\n", c.name))
-						.collect(Collectors.joining(""))) +
-						"}\n";
+						"\tpublic interface Visitor<T> {\n" +
+						(exprClasses.stream()
+										.map(c -> String.format("\t\tT visit%1$s(" + clazzName + ".%1$s expr);\n", c.name))
+										.collect(Collectors.joining(""))) +
+						"\t}\n";
 
-		Files.write(Paths.get("src/main/java/lucks/visitors/Visitor.java"), codeVisitor.getBytes(StandardCharsets.UTF_8));
+		String code = String.format(clazzTemplate, clazzName, codeVisitor);
+
+		Files.write(Paths.get("src/main/java/lucks/" + clazzName + ".java"), code.getBytes(StandardCharsets.UTF_8));
+		return exprClasses;
 	}
 
 	private static class Field {
@@ -83,7 +84,7 @@ public class GenExpr {
 		List<String> clsStrs = new LinkedList<>();
 		for (Clazz clazz : clazzes) {
 			clsStrs.add(
-							String.format("\tpublic static class %1$s extends Expr {\n" +
+							String.format("\tpublic static class %1$s extends %%1$s {\n" +
 											              (clazz.fields.stream()
 															              .map(f -> String.format("\t\tpublic final %s %s;\n", f.type, f.name))
 															              .collect(Collectors.joining(""))) +
@@ -96,14 +97,15 @@ public class GenExpr {
 															              .collect(Collectors.joining(""))) +
 											              "\t\t}\n" +
 											              "\n" +
-											              "\t\tpublic <T> T accept(Visitor<T> visitor) {\n" +
+											              "\t\tpublic <T> T accept(%%1$s.Visitor<T> visitor) {\n" +
 											              "\t\t\treturn visitor.visit%1$s(this);\n" +
 											              "\t\t}\n", clazz.name) +
 
 											(String.format("\n" +
 															               "\t\t@Override\n" +
 															               "\t\tpublic String toString() {\n" +
-															               "\t\t\treturn \"%s{\" + %s + \"}\";}",
+															               "\t\t\treturn \"%s{\" + %s + \"}\";\n" +
+															               "\t\t}\n",
 											               clazz.name,
 											               clazz.fields.stream()
 															               .map(f -> String.format("\"%s=\" + %s", f.name, f.name))

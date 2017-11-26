@@ -8,7 +8,7 @@ import lucks.RuntimeError;
 import lucks.Token;
 import lucks.TokenType;
 
-public class Interpreter implements Visitor<Object> {
+public class Interpreter implements Expr.Visitor<Object> {
 	@Override
 	public Object visitBinary(Expr.Binary expr) {
 		Object left = expr.left.accept(this);
