@@ -43,7 +43,9 @@ public class Parser {
 
 	public Expr parse() {
 		try {
-			return parseExpr(0);
+			Expr expr = parseExpr(0);
+			if (!match(TokenType.EOF)) throw error(peek(), "there are unparsed tokens remaining");
+			return expr;
 		} catch (ParseError error) {
 			return null;
 		}

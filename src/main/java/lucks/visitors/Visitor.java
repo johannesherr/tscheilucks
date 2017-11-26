@@ -1,4 +1,6 @@
-package lucks;
+package lucks.visitors;
+
+import lucks.Expr;
 
 /**
  * @author Johannes Herr

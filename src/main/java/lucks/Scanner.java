@@ -142,7 +142,7 @@ public class Scanner {
 			consume('"');
 		}
 		String lit = content.substring(start, pos);
-		tokens.add(new Token(TokenType.STRING, lit.substring(1, lit.length() - 1), lit, line));
+		tokens.add(new Token(TokenType.STRING, lit, lit.substring(1, lit.length() - 1), line));
 	}
 
 	private void scanNumber() {

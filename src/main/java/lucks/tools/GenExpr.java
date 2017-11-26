@@ -29,6 +29,8 @@ public class GenExpr {
 
 		String code = "package lucks;\n" +
 						"\n" +
+						"import lucks.visitors.Visitor;\n" +
+						"\n" +
 						"/**\n" +
 						" * @author Johannes Herr\n" +
 						" */\n" +
@@ -42,7 +44,9 @@ public class GenExpr {
 
 		Files.write(Paths.get("src/main/java/lucks/Expr.java"), code.getBytes(StandardCharsets.UTF_8));
 
-		String codeVisitor = "package lucks;\n" +
+		String codeVisitor = "package lucks.visitors;\n" +
+						"\n" +
+						"import lucks.Expr;\n" +
 						"\n" +
 						"/**\n" +
 						" * @author Johannes Herr\n" +
@@ -53,7 +57,7 @@ public class GenExpr {
 						.collect(Collectors.joining(""))) +
 						"}\n";
 
-		Files.write(Paths.get("src/main/java/lucks/Visitor.java"), codeVisitor.getBytes(StandardCharsets.UTF_8));
+		Files.write(Paths.get("src/main/java/lucks/visitors/Visitor.java"), codeVisitor.getBytes(StandardCharsets.UTF_8));
 	}
 
 	private static class Field {
@@ -81,7 +85,7 @@ public class GenExpr {
 			clsStrs.add(
 							String.format("\tpublic static class %1$s extends Expr {\n" +
 											              (clazz.fields.stream()
-															              .map(f -> String.format("\t\tfinal %s %s;\n", f.type, f.name))
+															              .map(f -> String.format("\t\tpublic final %s %s;\n", f.type, f.name))
 															              .collect(Collectors.joining(""))) +
 											              "\n" +
 											              "\t\tpublic %1$s(" + (clazz.fields.stream()

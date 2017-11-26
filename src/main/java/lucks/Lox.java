@@ -9,12 +9,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import lucks.visitors.Interpreter;
+
 /**
  * @author Johannes Herr
  */
 public class Lox {
 
+	private static final Interpreter interpreter = new Interpreter();
 	private static boolean hadError;
+	private static boolean hadRuntimeError;
 
 	public static void main(String[] args) throws IOException {
 		if (args.length > 1) {
@@ -30,6 +34,7 @@ public class Lox {
 		String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
 		run(content);
 		if (hadError) System.exit(65);
+		if (hadRuntimeError) System.exit(70);
 	}
 
 	private static void runPrompt() throws IOException {
@@ -38,19 +43,21 @@ public class Lox {
 		while (true) {
 			System.out.print("> ");
 			run(rdr.readLine());
-			hadError = false;
 		}
 	}
 	
 	private static void run(String content) {
+		hadError = false;
 		Scanner sc = new Scanner(content);
 		List<Token> tokens = sc.scanTokens();
-		Parser parser = new Parser(tokens);
+		if (hadError) return;
 
+		Parser parser = new Parser(tokens);
 		Expr expr = parser.parse();
 		if (hadError) return;
 
-		System.out.println(expr.accept(new AstPrinter()));
+		hadError = false;
+		interpreter.interpret(expr);
 	}
 	
 	static void error(int line, String msg) {
@@ -65,5 +72,10 @@ public class Lox {
 	private static void report(int line, String where, String msg) {
 		System.err.println(String.format("[line %,d] Error%s: %s", line, where, msg));
 		hadError = true;
+	}
+
+	public static void runtimeError(RuntimeError error) {
+		System.err.println(String.format("%s\n[line %d]", error.getMessage(), error.token.getLine()));
+		hadRuntimeError = true;
 	}
 }

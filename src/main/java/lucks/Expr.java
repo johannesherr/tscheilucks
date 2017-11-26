@@ -1,5 +1,7 @@
 package lucks;
 
+import lucks.visitors.Visitor;
+
 /**
  * @author Johannes Herr
  */
@@ -8,9 +10,9 @@ public abstract class Expr {
 	public abstract <T> T accept(Visitor<T> visitor);
 
 	public static class Binary extends Expr {
-		final Expr left;
-		final Token operator;
-		final Expr right;
+		public final Expr left;
+		public final Token operator;
+		public final Expr right;
 
 		public Binary(Expr left, Token operator, Expr right) {
 			this.left = left;
@@ -27,8 +29,8 @@ public abstract class Expr {
 			return "Binary{" + "left=" + left + ", " + "operator=" + operator + ", " + "right=" + right + "}";}	}
 
 	public static class Unary extends Expr {
-		final Token operator;
-		final Expr expr;
+		public final Token operator;
+		public final Expr expr;
 
 		public Unary(Token operator, Expr expr) {
 			this.operator = operator;
@@ -44,7 +46,7 @@ public abstract class Expr {
 			return "Unary{" + "operator=" + operator + ", " + "expr=" + expr + "}";}	}
 
 	public static class Literal extends Expr {
-		final Object value;
+		public final Object value;
 
 		public Literal(Object value) {
 			this.value = value;
@@ -59,7 +61,7 @@ public abstract class Expr {
 			return "Literal{" + "value=" + value + "}";}	}
 
 	public static class Grouping extends Expr {
-		final Expr expr;
+		public final Expr expr;
 
 		public Grouping(Expr expr) {
 			this.expr = expr;
