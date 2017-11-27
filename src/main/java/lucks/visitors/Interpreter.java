@@ -16,6 +16,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Object visitBinary(Expr.Binary expr) {
+		// for assignment, do not evaluate the left-hand side
+		if (expr.operator.getType() == TokenType.EQUAL) {
+				Object value = expr.right.accept(this);
+				environment.assign(((Expr.Variable) expr.left).name, value);
+				return value;
+		}
+		
 		Object left = expr.left.accept(this);
 		Object right = expr.right.accept(this);
 
@@ -53,6 +60,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 				return !isEqual(left, right);
 			case EQUAL_EQUAL:
 				return isEqual(left, right);
+
 
 //			case AND:
 //				return isTruthy(left) && isTruthy(right);

@@ -42,8 +42,13 @@ public class Lox {
 		BufferedReader rdr = new BufferedReader(new InputStreamReader(System.in));
 
 		while (true) {
-			System.out.print("> ");
-			run(rdr.readLine());
+			try {
+				System.out.print("> ");
+				run(rdr.readLine());
+			} catch (RuntimeError e) {
+				System.err.println(e.getMessage());
+				hadRuntimeError = true;
+			}
 		}
 	}
 	
@@ -56,6 +61,10 @@ public class Lox {
 		hadError = false;
 		Parser parser = new Parser(tokens);
 		List<Stmt> stmts = parser.parse();
+//		for (Stmt stmt : stmts) {
+//			System.out.println(stmt.accept(new AstPrinter()));
+//		}
+//		if (true) return;
 		if (hadError) return;
 
 		hadError = false;

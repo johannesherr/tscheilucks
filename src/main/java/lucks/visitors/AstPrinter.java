@@ -1,12 +1,13 @@
 package lucks.visitors;
 
 import lucks.Expr;
+import lucks.Stmt;
 
 
 /**
  * @author Johannes Herr
  */
-public class AstPrinter implements Expr.Visitor<String> {
+public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 	@Override
 	public String visitBinary(Expr.Binary expr) {
 		return String.format("(%s %s %s)", expr.operator.getLexeme(),
@@ -38,4 +39,18 @@ public class AstPrinter implements Expr.Visitor<String> {
 		return expression.accept(new AstPrinter());
 	}
 
+	@Override
+	public String visitExpression(Stmt.Expression stmt) {
+		return stmt.expression.accept(this);
+	}
+
+	@Override
+	public String visitPrint(Stmt.Print stmt) {
+		return String.format("(print %s)", stmt.expression.accept(this));
+	}
+
+	@Override
+	public String visitVar(Stmt.Var stmt) {
+		return String.format("(def %s %s)", stmt.name.getLexeme(), stmt.initializer.accept(this));
+	}
 }

@@ -3,3 +3,12 @@ print true;
 print 2 + 1;
 var xyz = 10 + 31;
 print xyz;
+xyz = xyz * 2;
+print xyz;
+var a = 20;
+var b = 22;
+print a + b;
+print xyz = a + b;
+print xyz;
+
+

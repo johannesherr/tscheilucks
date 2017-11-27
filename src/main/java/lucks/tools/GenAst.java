@@ -15,9 +15,8 @@ import com.google.common.base.Joiner;
 /**
  * @author Johannes Herr
  */
-public class GenExpr {
+public class GenAst {
 
-	// 17:38-
 	public static void main(String[] args) throws IOException {
 		String clazzName = "Expr";
 		List<Clazz> exprClasses = createAST(clazzName, asList(

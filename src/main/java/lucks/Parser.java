@@ -15,8 +15,10 @@ import com.google.common.collect.Sets;
 public class Parser {
 
 	private static final Map<TokenType, Integer> priorities = new HashMap<>();
+	private static final Map<TokenType, Boolean> leftAssoc = new HashMap<>();
 	static {
 		TokenType[][] pdef = {
+						{EQUAL},
 						{EQUAL_EQUAL, BANG_EQUAL},
 						{LESS, LESS_EQUAL, GREATER_EQUAL, GREATER},
 						{MINUS, PLUS},
@@ -29,8 +31,10 @@ public class Parser {
 			for (TokenType type : pdef[i]) {
 				priorities.put(type, i + 1);
 				operators.add(type);
+				leftAssoc.put(type, true);
 			}
 		}
+		leftAssoc.put(EQUAL, false);
 
 		ops = operators.toArray(new TokenType[operators.size()]);
 	}
@@ -111,8 +115,16 @@ public class Parser {
 		Expr expr = unary();
 
 		while (peekType(ops)) {
-			Integer nextPrio = priorities.get(peek().getType());
-			if (nextPrio <= priority) break;
+			TokenType opType = peek().getType();
+			Integer nextPrio = priorities.get(opType);
+			if (nextPrio < priority || (nextPrio == priority && leftAssoc.get(opType)))
+				break;
+
+			if (opType == EQUAL) {
+				if (!(expr instanceof Expr.Variable)) {
+					throw error(peek(), "Left hand side of assignment must be a l-value.");
+				}
+			}
 
 			expr = new Expr.Binary(expr, advance(), expression(nextPrio));
 		}
