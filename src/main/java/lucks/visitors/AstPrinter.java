@@ -1,5 +1,7 @@
 package lucks.visitors;
 
+import java.util.stream.Collectors;
+
 import lucks.Expr;
 import lucks.Stmt;
 
@@ -47,6 +49,11 @@ public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 	@Override
 	public String visitPrint(Stmt.Print stmt) {
 		return String.format("(print %s)", stmt.expression.accept(this));
+	}
+
+	@Override
+	public String visitBlock(Stmt.Block stmt) {
+		return String.format("(%s)", stmt.stmts.stream().map(sm -> sm.accept(this)).collect(Collectors.joining(", ")));
 	}
 
 	@Override

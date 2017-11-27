@@ -1,5 +1,7 @@
 package lucks;
 
+import java.util.List;
+
 public abstract class Stmt {
 	
 	public abstract <T> T accept(Stmt.Visitor<T> visitor);
@@ -38,6 +40,23 @@ public abstract class Stmt {
 		}
 	}
 
+	public static class Block extends Stmt {
+		public final List<Stmt> stmts;
+
+		public Block(List<Stmt> stmts) {
+			this.stmts = stmts;
+		}
+
+		public <T> T accept(Stmt.Visitor<T> visitor) {
+			return visitor.visitBlock(this);
+		}
+
+		@Override
+		public String toString() {
+			return "Block{" + "stmts=" + stmts + "}";
+		}
+	}
+
 	public static class Var extends Stmt {
 		public final Token name;
 		public final Expr initializer;
@@ -61,6 +80,7 @@ public abstract class Stmt {
 	public interface Visitor<T> {
 		T visitExpression(Stmt.Expression stmt);
 		T visitPrint(Stmt.Print stmt);
+		T visitBlock(Stmt.Block stmt);
 		T visitVar(Stmt.Var stmt);
 	}
 }

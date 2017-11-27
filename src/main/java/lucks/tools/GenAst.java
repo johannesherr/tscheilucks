@@ -30,6 +30,7 @@ public class GenAst {
 		List<Clazz> stmtClasses = createAST("Stmt", asList(
 						"Expression: Expr expression",
 						"Print: Expr expression",
+						"Block: List<Stmt> stmts",
 						"Var: Token name, Expr initializer"
 		));
 	}
@@ -38,6 +39,8 @@ public class GenAst {
 		List<Clazz> exprClasses = parseDef(def);
 
 		String clazzTemplate = "package lucks;\n" +
+						"\n" +
+						"import java.util.List;\n" +
 						"\n" +
 						"public abstract class %1$s {\n" +
 						"\t\n" +

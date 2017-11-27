@@ -12,7 +12,7 @@ import lucks.TokenType;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
-	private final Environment environment = new Environment();
+	private Environment environment = new Environment();
 
 	@Override
 	public Object visitBinary(Expr.Binary expr) {
@@ -117,6 +117,20 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	@Override
 	public Void visitPrint(Stmt.Print stmt) {
 		System.out.println(stringify(evaluate(stmt.expression)));
+		return null;
+	}
+
+	@Override
+	public Void visitBlock(Stmt.Block stmt) {
+		Environment parentEnvironment = this.environment;
+		try {
+			this.environment = new Environment(parentEnvironment);
+			for (Stmt child : stmt.stmts) {
+				child.accept(this);
+			}
+		} finally {
+			this.environment = parentEnvironment;
+		}
 		return null;
 	}
 

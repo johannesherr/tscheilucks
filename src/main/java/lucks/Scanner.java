@@ -14,7 +14,7 @@ public class Scanner {
 	private final List<Token> tokens = new LinkedList<>();
 	private final String content;
 	private int pos = 0;
-	private int line = 0;
+	private int line = 1;
 
 	private static final Map<String, TokenType> map = new HashMap<>();
 	static {
@@ -56,10 +56,10 @@ public class Scanner {
 		while (!isAtEOF()) {
 			char c = peek();
 			switch (c) {
-				case '{': addToken(TokenType.LEFT_PAREN); break;
-				case '}': addToken(TokenType.RIGHT_PAREN); break;
-				case '(': addToken(TokenType.LEFT_BRACE); break;
-				case ')': addToken(TokenType.RIGHT_BRACE); break;
+				case '(': addToken(TokenType.LEFT_PAREN); break;
+				case ')': addToken(TokenType.RIGHT_PAREN); break;
+				case '{': addToken(TokenType.LEFT_BRACE); break;
+				case '}': addToken(TokenType.RIGHT_BRACE); break;
 				case ',': addToken(TokenType.COMMA); break;
 				case '.': addToken(TokenType.DOT); break;
 				case '-': addToken(TokenType.MINUS); break;

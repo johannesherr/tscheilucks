@@ -10,5 +10,40 @@ var b = 22;
 print a + b;
 print xyz = a + b;
 print xyz;
+{
+var a = 1001;
+print a;
+{a = 50; print a;}
+{var a = 1; print a;}
+print a;
+}
+print a;
+{var x= 3;}
 
+
+var a = "global a";
+var b = "global b";
+var c = "global c";
+{
+  var a = "outer a";
+  var b = "outer b";
+  {
+    var a = "inner a";
+    print a;
+    print b;
+    print c;
+  }
+  print a;
+  print b;
+  print c;
+}
+print a;
+print b;
+print c;
+
+var a = 1;
+{
+  var a = a + 2;
+  print a;
+}
 

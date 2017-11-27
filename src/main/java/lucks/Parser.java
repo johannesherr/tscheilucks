@@ -47,7 +47,6 @@ public class Parser {
 		this.tokens = tokens;
 	}
 
-
 	public List<Stmt> parse() {
 		List<Stmt> program = new LinkedList<>();
 		while (!isAtEnd()) {
@@ -55,9 +54,6 @@ public class Parser {
 			if (stmt != null) {
 				program.add(stmt);
 			}
-		}
-		if (!isAtEnd()) {
-			throw error(peek(), "there are unparsed tokens remaining");
 		}
 		return program;
 	}
@@ -88,11 +84,18 @@ public class Parser {
 	}
 
 	private Stmt statement() {
-		if (match(PRINT)) {
-			return parsePrintStmt();
-		} else {
-			return parseExprStmt();
+		if (match(PRINT)) return parsePrintStmt();
+		else if (match(LEFT_BRACE)) return parseBlock();
+		else return parseExprStmt();
+	}
+
+	private Stmt parseBlock() {
+		List<Stmt> stmts = new LinkedList<>();
+		while (!isAtEnd() && !check(RIGHT_BRACE)) {
+			stmts.add(declaration());
 		}
+		consume(RIGHT_BRACE);
+		return new Stmt.Block(stmts);
 	}
 
 	private Stmt.Expression parseExprStmt() {
@@ -211,7 +214,7 @@ public class Parser {
 		return tokens.get(current - 1);
 	}
 
-	public void synchronize() {
+	private void synchronize() {
 		HashSet<TokenType> target = Sets.newHashSet(
 						CLASS,
 						FUN,
