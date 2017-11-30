@@ -60,4 +60,12 @@ public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 	public String visitVar(Stmt.Var stmt) {
 		return String.format("(def %s %s)", stmt.name.getLexeme(), stmt.initializer.accept(this));
 	}
+
+	@Override
+	public String visitIf(Stmt.If stmt) {
+		return String.format("(if %s %s %s)",
+		                     stmt.cond.accept(this),
+						             stmt.thenBranch.accept(this),
+						             stmt.elseBranch.accept(this));
+	}
 }

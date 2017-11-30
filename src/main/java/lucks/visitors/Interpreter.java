@@ -16,17 +16,24 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Object visitBinary(Expr.Binary expr) {
+		// for logical operators, short-circuit execution
+		Object left = evaluate(expr.left);
+		TokenType opType = expr.operator.getType();
+		if (opType == TokenType.AND || opType == TokenType.OR) {
+			if (!isTruthy(left) && opType == TokenType.AND ||
+							isTruthy(left) && opType == TokenType.OR) return left;
+			return evaluate(expr.right);
+		}
+
 		// for assignment, do not evaluate the left-hand side
-		if (expr.operator.getType() == TokenType.EQUAL) {
-				Object value = expr.right.accept(this);
+		if (opType == TokenType.EQUAL) {
+				Object value = evaluate(expr.right);
 				environment.assign(((Expr.Variable) expr.left).name, value);
 				return value;
 		}
 		
-		Object left = expr.left.accept(this);
-		Object right = expr.right.accept(this);
+		Object right = evaluate(expr.right);
 
-		TokenType opType = expr.operator.getType();
 		switch (opType) {
 			case PLUS:
 				if (left instanceof Double && right instanceof Double)
@@ -142,6 +149,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 		}
 
 		environment.define(stmt.name.getLexeme(), value);
+		return null;
+	}
+
+	@Override
+	public Void visitIf(Stmt.If stmt) {
+		if (isTruthy(evaluate(stmt.cond))) {
+			execute(stmt.thenBranch);
+		} else if (stmt.elseBranch != null) {
+			execute(stmt.elseBranch);
+		}
 		return null;
 	}
 

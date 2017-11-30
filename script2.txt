@@ -1,0 +1,6 @@
+
+var a = 42;
+if (true or false and false) {
+  a = 101;
+} else a = 7;
+print a;

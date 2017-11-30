@@ -76,11 +76,33 @@ public abstract class Stmt {
 		}
 	}
 
+	public static class If extends Stmt {
+		public final Expr cond;
+		public final Stmt thenBranch;
+		public final Stmt elseBranch;
+
+		public If(Expr cond, Stmt thenBranch, Stmt elseBranch) {
+			this.cond = cond;
+			this.thenBranch = thenBranch;
+			this.elseBranch = elseBranch;
+		}
+
+		public <T> T accept(Stmt.Visitor<T> visitor) {
+			return visitor.visitIf(this);
+		}
+
+		@Override
+		public String toString() {
+			return "If{" + "cond=" + cond + ", " + "thenBranch=" + thenBranch + ", " + "elseBranch=" + elseBranch + "}";
+		}
+	}
+
 
 	public interface Visitor<T> {
 		T visitExpression(Stmt.Expression stmt);
 		T visitPrint(Stmt.Print stmt);
 		T visitBlock(Stmt.Block stmt);
 		T visitVar(Stmt.Var stmt);
+		T visitIf(Stmt.If stmt);
 	}
 }

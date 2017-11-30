@@ -31,7 +31,8 @@ public class GenAst {
 						"Expression: Expr expression",
 						"Print: Expr expression",
 						"Block: List<Stmt> stmts",
-						"Var: Token name, Expr initializer"
+						"Var: Token name, Expr initializer",
+						"If: Expr cond, Stmt thenBranch, Stmt elseBranch"
 		));
 	}
 

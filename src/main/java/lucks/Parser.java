@@ -19,6 +19,8 @@ public class Parser {
 	static {
 		TokenType[][] pdef = {
 						{EQUAL},
+						{OR},
+						{AND},
 						{EQUAL_EQUAL, BANG_EQUAL},
 						{LESS, LESS_EQUAL, GREATER_EQUAL, GREATER},
 						{MINUS, PLUS},
@@ -85,6 +87,7 @@ public class Parser {
 
 	private Stmt statement() {
 		if (match(PRINT)) return parsePrintStmt();
+		if (match(IF)) return parseIfStmt();
 		else if (match(LEFT_BRACE)) return parseBlock();
 		else return parseExprStmt();
 	}
@@ -108,6 +111,20 @@ public class Parser {
 		Expr expr = expression();
 		consume(SEMICOLON);
 		return new Stmt.Print(expr);
+	}
+
+	private Stmt parseIfStmt() {
+		consume(LEFT_PAREN);
+		Expr cond = expression();
+		consume(RIGHT_PAREN);
+
+		Stmt ifCase = statement();
+		Stmt elseCase = null;
+		if (match(ELSE)) {
+			elseCase = statement();
+		}
+
+		return new Stmt.If(cond, ifCase, elseCase);
 	}
 
 	private Expr expression() {
@@ -149,9 +166,9 @@ public class Parser {
 			return new Expr.Literal(previous().getLiteral());
 		}
 
-		if (match(LEFT_BRACE)) {
+		if (match(LEFT_PAREN)) {
 			Expr expr = expression(0);
-			consume(RIGHT_BRACE);
+			consume(RIGHT_PAREN);
 			return new Expr.Grouping(expr);
 		}
 
