@@ -68,4 +68,11 @@ public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 						             stmt.thenBranch.accept(this),
 						             stmt.elseBranch.accept(this));
 	}
+
+	@Override
+	public String visitWhile(Stmt.While stmt) {
+		return String.format("(while %s %s)",
+		                     stmt.cond.accept(this),
+		                     stmt.body.accept(this));
+	}
 }

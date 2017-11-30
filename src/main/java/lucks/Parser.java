@@ -88,6 +88,7 @@ public class Parser {
 	private Stmt statement() {
 		if (match(PRINT)) return parsePrintStmt();
 		if (match(IF)) return parseIfStmt();
+		if (match(WHILE)) return parseWhileStmt();
 		else if (match(LEFT_BRACE)) return parseBlock();
 		else return parseExprStmt();
 	}
@@ -125,6 +126,16 @@ public class Parser {
 		}
 
 		return new Stmt.If(cond, ifCase, elseCase);
+	}
+
+	private Stmt parseWhileStmt() {
+		consume(LEFT_PAREN);
+		Expr cond = expression();
+		consume(RIGHT_PAREN);
+
+		Stmt body = statement();
+
+		return new Stmt.While(cond, body);
 	}
 
 	private Expr expression() {

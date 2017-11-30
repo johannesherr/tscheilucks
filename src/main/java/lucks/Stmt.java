@@ -97,6 +97,25 @@ public abstract class Stmt {
 		}
 	}
 
+	public static class While extends Stmt {
+		public final Expr cond;
+		public final Stmt body;
+
+		public While(Expr cond, Stmt body) {
+			this.cond = cond;
+			this.body = body;
+		}
+
+		public <T> T accept(Stmt.Visitor<T> visitor) {
+			return visitor.visitWhile(this);
+		}
+
+		@Override
+		public String toString() {
+			return "While{" + "cond=" + cond + ", " + "body=" + body + "}";
+		}
+	}
+
 
 	public interface Visitor<T> {
 		T visitExpression(Stmt.Expression stmt);
@@ -104,5 +123,6 @@ public abstract class Stmt {
 		T visitBlock(Stmt.Block stmt);
 		T visitVar(Stmt.Var stmt);
 		T visitIf(Stmt.If stmt);
+		T visitWhile(Stmt.While stmt);
 	}
 }
