@@ -25,3 +25,17 @@ while (cnt > 0) {
 
   cnt = cnt - 1;
 }
+
+print "";
+for (var i = 0; i < 10; i = i + 2) print i;
+print "";
+
+var a = 0;
+var b = 1;
+
+while (a < 10000) {
+  print a;
+  var temp = a;
+  a = b;
+  b = temp + b;
+}

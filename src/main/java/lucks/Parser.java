@@ -1,5 +1,6 @@
 package lucks;
 
+import static java.util.Arrays.asList;
 import static lucks.TokenType.*;
 
 import java.util.ArrayList;
@@ -89,6 +90,7 @@ public class Parser {
 		if (match(PRINT)) return parsePrintStmt();
 		if (match(IF)) return parseIfStmt();
 		if (match(WHILE)) return parseWhileStmt();
+		if (match(FOR)) return parseForStmt();
 		else if (match(LEFT_BRACE)) return parseBlock();
 		else return parseExprStmt();
 	}
@@ -136,6 +138,46 @@ public class Parser {
 		Stmt body = statement();
 
 		return new Stmt.While(cond, body);
+	}
+
+	private Stmt parseForStmt() {
+		consume(LEFT_PAREN);
+
+		Stmt init;
+		if (match(SEMICOLON)) {
+			init = null;
+		} else if (match(VAR)) {
+			init = varDeclaration();
+		} else {
+			init = parseExprStmt();
+		}
+		
+		Expr cond = null;
+		if (!check(SEMICOLON)) {
+			cond = expression();
+		}
+		consume(SEMICOLON);
+
+		Expr incr = null;
+		if (!check(RIGHT_PAREN)) {
+			incr = expression();
+		}
+		consume(RIGHT_PAREN);
+
+		Stmt body = statement();
+
+		if (incr != null) {
+			body = new Stmt.Block(asList(body, new Stmt.Expression(incr)));
+		}
+
+		if (cond == null) cond = new Expr.Literal(true);
+		Stmt.While loop = new Stmt.While(cond, body);
+
+		if (init != null) {
+			return new Stmt.Block(asList(init, loop));
+		} else {
+			return loop;
+		}
 	}
 
 	private Expr expression() {

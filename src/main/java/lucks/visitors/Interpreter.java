@@ -67,12 +67,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 				return !isEqual(left, right);
 			case EQUAL_EQUAL:
 				return isEqual(left, right);
-
-
-//			case AND:
-//				return isTruthy(left) && isTruthy(right);
-//			case OR:
-//				return isTruthy(left) || isTruthy(right);
 		}
 
 		throw new AssertionError(opType);
