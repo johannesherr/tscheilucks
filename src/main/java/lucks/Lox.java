@@ -21,7 +21,7 @@ public class Lox {
 	private static boolean hadRuntimeError;
 
 	public static void main(String[] args) throws IOException {
-		args = new String[]{"script3.txt"};
+		args = new String[]{"script4.txt"};
 		if (args.length > 1) {
 			System.out.println("Usage: jlox [script]");
 		} else if (args.length == 1) {
@@ -33,7 +33,11 @@ public class Lox {
 
 	private static void runFile(Path path) throws IOException {
 		String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-		run(content);
+		try {
+			run(content);
+		} catch (RuntimeError e) {
+			runtimeError(e);
+		}
 		if (hadError) System.exit(65);
 		if (hadRuntimeError) System.exit(70);
 	}
@@ -46,8 +50,7 @@ public class Lox {
 				System.out.print("> ");
 				run(rdr.readLine());
 			} catch (RuntimeError e) {
-				System.err.println(e.getMessage());
-				hadRuntimeError = true;
+				runtimeError(e);
 			}
 		}
 	}

@@ -76,6 +76,46 @@ public abstract class Stmt {
 		}
 	}
 
+	public static class FunDecl extends Stmt {
+		public final Token name;
+		public final List<Token> parameters;
+		public final List<Stmt> body;
+
+		public FunDecl(Token name, List<Token> parameters, List<Stmt> body) {
+			this.name = name;
+			this.parameters = parameters;
+			this.body = body;
+		}
+
+		public <T> T accept(Stmt.Visitor<T> visitor) {
+			return visitor.visitFunDecl(this);
+		}
+
+		@Override
+		public String toString() {
+			return "FunDecl{" + "name=" + name + ", " + "parameters=" + parameters + ", " + "body=" + body + "}";
+		}
+	}
+
+	public static class Return extends Stmt {
+		public final Token keyword;
+		public final Expr value;
+
+		public Return(Token keyword, Expr value) {
+			this.keyword = keyword;
+			this.value = value;
+		}
+
+		public <T> T accept(Stmt.Visitor<T> visitor) {
+			return visitor.visitReturn(this);
+		}
+
+		@Override
+		public String toString() {
+			return "Return{" + "keyword=" + keyword + ", " + "value=" + value + "}";
+		}
+	}
+
 	public static class If extends Stmt {
 		public final Expr cond;
 		public final Stmt thenBranch;
@@ -122,6 +162,8 @@ public abstract class Stmt {
 		T visitPrint(Stmt.Print stmt);
 		T visitBlock(Stmt.Block stmt);
 		T visitVar(Stmt.Var stmt);
+		T visitFunDecl(Stmt.FunDecl stmt);
+		T visitReturn(Stmt.Return stmt);
 		T visitIf(Stmt.If stmt);
 		T visitWhile(Stmt.While stmt);
 	}

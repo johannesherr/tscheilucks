@@ -1,4 +1,38 @@
 
 
-print clock();
+var start = clock();
+
+fun hello(fst, snd) {
+  print "Hello dear " + fst + " " + snd + "! How are you?";
+}
+
+hello("Johannes", "Herr");
+
+var end = clock();
+
+print "took: " + str(end - start);
+
+fun add(a, b) {
+  if (a > 5) {
+    return;
+  }
+  return a + b;
+}
+
+print add(1, 32);
+
+fun createAdder(v1) {
+  var v3 = 0;
+  fun adder(v2) {
+    return v1 + v3 + v2;
+  }
+  return adder;
+}
+
+var myfun = createAdder(5);
+print myfun(7);
+
+print createAdder(5)(7);
+
+
 

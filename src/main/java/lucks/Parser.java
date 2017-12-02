@@ -17,6 +17,8 @@ public class Parser {
 
 	private static final Map<TokenType, Integer> priorities = new HashMap<>();
 	private static final Map<TokenType, Boolean> leftAssoc = new HashMap<>();
+	public static final int MAX_FUN_ARGS = 8;
+
 	static {
 		TokenType[][] pdef = {
 						{EQUAL},
@@ -51,7 +53,7 @@ public class Parser {
 	}
 
 	public List<Stmt> parse() {
-		List<Stmt> program = new LinkedList<>();
+		List<Stmt> program = new ArrayList<>();
 		while (!isAtEnd()) {
 			Stmt stmt = declaration();
 			if (stmt != null) {
@@ -63,11 +65,9 @@ public class Parser {
 
 	private Stmt declaration() {
 		try {
-			if (match(VAR)) {
-				return varDeclaration();
-			} else {
-				return statement();
-			}
+			if (match(VAR)) return varDeclaration();
+			else if (match(FUN)) return funDeclaration("function");
+			else return statement();
 		} catch (ParseError error) {
 			synchronize();
 			return null;
@@ -86,8 +86,32 @@ public class Parser {
 		return new Stmt.Var(name, initializer);
 	}
 
+	private Stmt funDeclaration(String kind) {
+		Token name = consume(IDENTIFIER, " for " + kind);
+
+		consume(LEFT_PAREN);
+		List<Token> params = new LinkedList<>();
+		if (!check(RIGHT_PAREN)) {
+			do {
+				params.add(consume(IDENTIFIER));
+			} while (match(COMMA));
+		}
+		Token paren = consume(RIGHT_PAREN);
+
+		if (params.size() > MAX_FUN_ARGS) {
+			error(paren, String.format(
+							"functions are limited to at most %s arguments, was %d",
+							MAX_FUN_ARGS, params.size()));
+		}
+
+		consume(LEFT_BRACE);
+		List<Stmt> body = block();
+		return new Stmt.FunDecl(name, params, body);
+	}
+
 	private Stmt statement() {
 		if (match(PRINT)) return parsePrintStmt();
+		if (match(RETURN)) return parseReturnStmt();
 		if (match(IF)) return parseIfStmt();
 		if (match(WHILE)) return parseWhileStmt();
 		if (match(FOR)) return parseForStmt();
@@ -96,12 +120,16 @@ public class Parser {
 	}
 
 	private Stmt parseBlock() {
-		List<Stmt> stmts = new LinkedList<>();
+		return new Stmt.Block(block());
+	}
+
+	private List<Stmt> block() {
+		List<Stmt> stmts = new ArrayList<>();
 		while (!isAtEnd() && !check(RIGHT_BRACE)) {
 			stmts.add(declaration());
 		}
 		consume(RIGHT_BRACE);
-		return new Stmt.Block(stmts);
+		return stmts;
 	}
 
 	private Stmt.Expression parseExprStmt() {
@@ -114,6 +142,16 @@ public class Parser {
 		Expr expr = expression();
 		consume(SEMICOLON);
 		return new Stmt.Print(expr);
+	}
+
+	private Stmt parseReturnStmt() {
+		Token keyword = previous();
+		Expr expr = null;
+		if (!check(SEMICOLON)) {
+			expr = expression();
+		}
+		consume(SEMICOLON);
+		return new Stmt.Return(keyword, expr);
 	}
 
 	private Stmt parseIfStmt() {
@@ -212,19 +250,34 @@ public class Parser {
 
 	private Expr call() {
 		Expr expr = primary();
-		if (match(LEFT_PAREN)) {
-			List<Expr> args = new LinkedList<>();
-			if (!check(RIGHT_PAREN)) {
-				do {
-					args.add(expression());
-				} while (match(COMMA));
-			}
-			consume(RIGHT_PAREN);
 
-			return new Expr.Call(expr, previous(), args);
+		while (true) {
+			if (match(LEFT_PAREN)) {
+				expr = finishCall(expr);
+			} else {
+				break;
+			}
+		}
+		
+		return expr;
+	}
+
+	private Expr finishCall(Expr expr) {
+		List<Expr> args = new ArrayList<>();
+		if (!check(RIGHT_PAREN)) {
+			do {
+				args.add(expression());
+			} while (match(COMMA));
+		}
+		Token paren = consume(RIGHT_PAREN);
+
+		if (args.size() > MAX_FUN_ARGS) {
+			error(paren, String.format(
+							"functions are limited to at most %s arguments, was %d",
+							MAX_FUN_ARGS, args.size()));
 		}
 
-		return expr;
+		return new Expr.Call(expr, paren, args);
 	}
 
 	private Expr primary() {
@@ -250,10 +303,14 @@ public class Parser {
 	}
 
 	private Token consume(TokenType tokenType) {
+		return consume(tokenType, "");
+	}
+
+	private Token consume(TokenType tokenType, String s) {
 		if (match(tokenType)) {
 			return previous();
 		} else {
-			throw error(peek(), String.format("expected %s, but was %s",
+			throw error(peek(), String.format("expected %s, but was %s" + s,
 			                                  tokenType,
 			                                  peek().getType()));
 		}

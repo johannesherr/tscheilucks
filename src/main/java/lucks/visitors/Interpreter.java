@@ -7,6 +7,8 @@ import java.util.Objects;
 import lucks.Environment;
 import lucks.Expr;
 import lucks.LoxCallable;
+import lucks.LoxFunction;
+import lucks.Return;
 import lucks.RuntimeError;
 import lucks.Stmt;
 import lucks.Token;
@@ -25,13 +27,30 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 			}
 
 			@Override
-			public Object call(Interpreter interpreter, List<Object> params) {
-				return System.currentTimeMillis();
+			public Double call(Interpreter interpreter, List<Object> params) {
+				return (double) System.currentTimeMillis();
 			}
 
 			@Override
 			public String toString() {
 				return "<builtin clock>";
+			}
+		});
+
+		globals.define("str", new LoxCallable() {
+			@Override
+			public int arity() {
+				return 1;
+			}
+
+			@Override
+			public String call(Interpreter interpreter, List<Object> params) {
+				return stringify(params.get(0));
+			}
+
+			@Override
+			public String toString() {
+				return "<builtin str>";
 			}
 		});
 	}
@@ -66,6 +85,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 				throw error(expr.operator, "Operands must be either both strings or both numbers.");
 		}
 
+		switch (opType) {
+			case BANG_EQUAL:
+				return !isEqual(left, right);
+			case EQUAL_EQUAL:
+				return isEqual(left, right);
+		}
+
 		checkNumberOperands(expr.operator, left, right);
 		switch (opType) {
 			case MINUS:
@@ -82,13 +108,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 				return (double) left < (double) right;
 			case LESS_EQUAL:
 				return (double) left <= (double) right;
-		}
-
-		switch (opType) {
-			case BANG_EQUAL:
-				return !isEqual(left, right);
-			case EQUAL_EQUAL:
-				return isEqual(left, right);
 		}
 
 		throw new AssertionError(opType);
@@ -134,13 +153,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	@Override
 	public Object visitCall(Expr.Call expr) {
 		Object callee = evaluate(expr.callee);
+		if (!(callee instanceof LoxCallable)) {
+			throw error(expr.paren, "Can only call functions and classes.");
+		}
 
 		LoxCallable callable = (LoxCallable) callee;
 		if (callable.arity() != expr.arguments.size()) {
-			throw new RuntimeError(expr.paren,
-			                       String.format("Wrong number of arguments, when calling %s. " +
-							                                     "Expected %s, was %s",
-			                                     callable, callable.arity(), expr.arguments.size()));
+			throw error(expr.paren,
+			            String.format("Wrong number of arguments, when calling %s. " +
+							                          "Expected %s, was %s",
+			                          callable, callable.arity(), expr.arguments.size()));
 		}
 
 		List<Object> argValues = new LinkedList<>();
@@ -165,15 +187,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitBlock(Stmt.Block stmt) {
-		Environment parentEnvironment = this.environment;
-		try {
-			this.environment = new Environment(parentEnvironment);
-			for (Stmt child : stmt.stmts) {
-				child.accept(this);
-			}
-		} finally {
-			this.environment = parentEnvironment;
-		}
+		executeBlock(stmt.stmts, new Environment(this.environment));
 		return null;
 	}
 
@@ -186,6 +200,22 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 		environment.define(stmt.name.getLexeme(), value);
 		return null;
+	}
+
+	@Override
+	public Void visitFunDecl(Stmt.FunDecl stmt) {
+		globals.define(stmt.name.getLexeme(),
+		               new LoxFunction(stmt, new Environment(this.environment)));
+		return null;
+	}
+
+	@Override
+	public Void visitReturn(Stmt.Return stmt) {
+		Object val = null;
+		if (stmt.value != null) {
+			val = evaluate(stmt.value);
+		}
+		throw new Return(val);
 	}
 
 	@Override
@@ -241,12 +271,25 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	private void checkNumberOperands(Token operator, Object left, Object right) {
 		if (!(left instanceof Double))
-			throw error(operator, "Operand must be a number.");
+			throw error(operator, String.format("First operand of %s must be a number.", operator.getLexeme()));
 		if (!(right instanceof Double))
-			throw error(operator, "Operand must be a number.");
+			throw error(operator, String.format("Second operand of %s must be a number.", operator.getLexeme()));
 	}
 
 	private RuntimeError error(Token operator, String msg) {
 		return new RuntimeError(operator, msg);
 	}
+
+	public void executeBlock(List<Stmt> body, Environment callEnv) {
+		Environment parentEnvironment = this.environment;
+		try {
+			this.environment = callEnv;
+			for (Stmt child : body) {
+				execute(child);
+			}
+		} finally {
+			this.environment = parentEnvironment;
+		}
+	}
+
 }
