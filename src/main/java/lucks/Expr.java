@@ -97,6 +97,27 @@ public abstract class Expr {
 		}
 	}
 
+	public static class Call extends Expr {
+		public final Expr callee;
+		public final Token paren;
+		public final List<Expr> arguments;
+
+		public Call(Expr callee, Token paren, List<Expr> arguments) {
+			this.callee = callee;
+			this.paren = paren;
+			this.arguments = arguments;
+		}
+
+		public <T> T accept(Expr.Visitor<T> visitor) {
+			return visitor.visitCall(this);
+		}
+
+		@Override
+		public String toString() {
+			return "Call{" + "callee=" + callee + ", " + "paren=" + paren + ", " + "arguments=" + arguments + "}";
+		}
+	}
+
 
 	public interface Visitor<T> {
 		T visitBinary(Expr.Binary expr);
@@ -104,5 +125,6 @@ public abstract class Expr {
 		T visitLiteral(Expr.Literal expr);
 		T visitVariable(Expr.Variable expr);
 		T visitGrouping(Expr.Grouping expr);
+		T visitCall(Expr.Call expr);
 	}
 }

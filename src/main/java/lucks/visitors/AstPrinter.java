@@ -37,6 +37,14 @@ public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 		return String.format("(group %s)", expr.expr.accept(new AstPrinter()));
 	}
 
+	@Override
+	public String visitCall(Expr.Call expr) {
+		return String.format("(%s %s)", expr.callee.accept(this),
+		                     expr.arguments.stream()
+						                     .map(a -> a.accept(this))
+						                     .collect(Collectors.joining(", ")));
+	}
+
 	public static String print(Expr expression) {
 		return expression.accept(new AstPrinter());
 	}

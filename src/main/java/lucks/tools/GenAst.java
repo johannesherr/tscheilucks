@@ -24,7 +24,8 @@ public class GenAst {
 						"Unary: Token operator, Expr expr",
 						"Literal: Object value",
 						"Variable: Token name",
-						"Grouping: Expr expr"
+						"Grouping: Expr expr",
+						"Call: Expr callee, Token paren, List<Expr> arguments"
 		));
 
 		List<Clazz> stmtClasses = createAST("Stmt", asList(
@@ -32,6 +33,7 @@ public class GenAst {
 						"Print: Expr expression",
 						"Block: List<Stmt> stmts",
 						"Var: Token name, Expr initializer",
+//						"FunDecl: Token name, List<Token> parameters, List<Stmt> body",
 						"If: Expr cond, Stmt thenBranch, Stmt elseBranch",
 						"While: Expr cond, Stmt body"
 		));

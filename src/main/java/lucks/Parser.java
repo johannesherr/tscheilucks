@@ -207,7 +207,24 @@ public class Parser {
 
 	private Expr unary() {
 		if (match(BANG, MINUS)) return new Expr.Unary(previous(), unary());
-		return primary();
+		return call();
+	}
+
+	private Expr call() {
+		Expr expr = primary();
+		if (match(LEFT_PAREN)) {
+			List<Expr> args = new LinkedList<>();
+			if (!check(RIGHT_PAREN)) {
+				do {
+					args.add(expression());
+				} while (match(COMMA));
+			}
+			consume(RIGHT_PAREN);
+
+			return new Expr.Call(expr, previous(), args);
+		}
+
+		return expr;
 	}
 
 	private Expr primary() {

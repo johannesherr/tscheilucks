@@ -1,10 +1,12 @@
 package lucks.visitors;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
 import lucks.Environment;
 import lucks.Expr;
+import lucks.LoxCallable;
 import lucks.RuntimeError;
 import lucks.Stmt;
 import lucks.Token;
@@ -12,7 +14,27 @@ import lucks.TokenType;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
-	private Environment environment = new Environment();
+	private Environment globals = new Environment();
+	private Environment environment = globals;
+
+	public Interpreter() {
+		globals.define("clock", new LoxCallable() {
+			@Override
+			public int arity() {
+				return 0;
+			}
+
+			@Override
+			public Object call(Interpreter interpreter, List<Object> params) {
+				return System.currentTimeMillis();
+			}
+
+			@Override
+			public String toString() {
+				return "<builtin clock>";
+			}
+		});
+	}
 
 	@Override
 	public Object visitBinary(Expr.Binary expr) {
@@ -107,6 +129,26 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	@Override
 	public Object visitGrouping(Expr.Grouping expr) {
 		return expr.expr.accept(this);
+	}
+
+	@Override
+	public Object visitCall(Expr.Call expr) {
+		Object callee = evaluate(expr.callee);
+
+		LoxCallable callable = (LoxCallable) callee;
+		if (callable.arity() != expr.arguments.size()) {
+			throw new RuntimeError(expr.paren,
+			                       String.format("Wrong number of arguments, when calling %s. " +
+							                                     "Expected %s, was %s",
+			                                     callable, callable.arity(), expr.arguments.size()));
+		}
+
+		List<Object> argValues = new LinkedList<>();
+		for (Expr argument : expr.arguments) {
+			argValues.add(evaluate(argument));
+		}
+
+		return callable.call(this, argValues);
 	}
 
 	@Override

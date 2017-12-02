@@ -21,7 +21,7 @@ public class Lox {
 	private static boolean hadRuntimeError;
 
 	public static void main(String[] args) throws IOException {
-		args = new String[]{"script2.txt"};
+		args = new String[]{"script3.txt"};
 		if (args.length > 1) {
 			System.out.println("Usage: jlox [script]");
 		} else if (args.length == 1) {
