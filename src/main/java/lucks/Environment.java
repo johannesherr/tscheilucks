@@ -27,11 +27,6 @@ public class Environment {
 			return;
 		}
 
-		if (enclosing != null) {
-			enclosing.assign(name, value);
-			return;
-		}
-
 		throw new RuntimeError(name, String.format("Undefined variable '%s'", name.getLexeme()));
 	}
 
@@ -41,10 +36,19 @@ public class Environment {
 			return data.get(identifier);
 		}
 
-		if (enclosing != null) {
-			return enclosing.get(name);
-		}
-
 		throw new RuntimeError(name, String.format("Undefined variable '%s'.", identifier));
+	}
+
+	private Environment ancestor(Integer distance) {
+		if (distance == 0) return this;
+		else return enclosing.ancestor(distance - 1);
+	}
+
+	public Object getAt(Token name, Integer distance) {
+		return ancestor(distance).get(name);
+	}
+
+	public void assignAt(Integer distance, Token name, Object value) {
+		ancestor(distance).assign(name, value);
 	}
 }

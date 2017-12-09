@@ -1,7 +1,9 @@
 package lucks.visitors;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import lucks.Environment;
@@ -18,6 +20,8 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	private Environment globals = new Environment();
 	private Environment environment = globals;
+	// Note: the book uses Expr instead of Token; why?
+	private final Map<Token, Integer> locals = new HashMap<>();
 
 	public Interpreter() {
 		globals.define("clock", new LoxCallable() {
@@ -68,9 +72,15 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 		// for assignment, do not evaluate the left-hand side
 		if (opType == TokenType.EQUAL) {
-				Object value = evaluate(expr.right);
-				environment.assign(((Expr.Variable) expr.left).name, value);
-				return value;
+			Object value = evaluate(expr.right);
+			Token varName = ((Expr.Variable) expr.left).name;
+			Integer distance = locals.get(varName);
+			if (distance != null) {
+				environment.assignAt(distance, varName, value);
+			} else {
+				globals.assign(varName, value);
+			}
+			return value;
 		}
 		
 		Object right = evaluate(expr.right);
@@ -142,7 +152,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Object visitVariable(Expr.Variable expr) {
-		return environment.get(expr.name);
+		return lookupVariable(expr);
+	}
+
+	private Object lookupVariable(Expr.Variable expr) {
+		Integer distance = locals.get(expr.name);
+
+		if (distance != null) {
+			return environment.getAt(expr.name, distance);
+		} else {
+			return globals.get(expr.name);
+		}
 	}
 
 	@Override
@@ -204,8 +224,8 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitFunDecl(Stmt.FunDecl stmt) {
-		globals.define(stmt.name.getLexeme(),
-		               new LoxFunction(stmt, new Environment(this.environment)));
+		environment.define(stmt.name.getLexeme(),
+		                   new LoxFunction(stmt, this.environment));
 		return null;
 	}
 
@@ -292,4 +312,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 		}
 	}
 
+	public void resolve(Token name, int depth) {
+		locals.put(name, depth);
+	}
 }

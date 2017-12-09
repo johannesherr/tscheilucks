@@ -1,0 +1,28 @@
+
+var xyz = "foo";
+
+var g = 42;
+
+{
+    var xyz = "inner";
+    {
+        fun test(p) {
+            print xyz;
+            xyz = p;
+            return xyz;
+        }
+
+        print test(1);
+
+        //var x = x;
+
+        var xyz = "bar";
+
+        //return 42;
+        print test(2);
+    }
+    var xyz = "bug";
+}
+
+//return 42;
+

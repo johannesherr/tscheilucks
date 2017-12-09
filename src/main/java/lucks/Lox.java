@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import lucks.visitors.Interpreter;
+import lucks.visitors.Resolver;
 
 /**
  * @author Johannes Herr
@@ -17,11 +18,29 @@ import lucks.visitors.Interpreter;
 public class Lox {
 
 	private static final Interpreter interpreter = new Interpreter();
+	private static final String RUN_LATEST = "run-latest";
+	private static final String RUN_ALL = "run-all";
 	private static boolean hadError;
 	private static boolean hadRuntimeError;
 
 	public static void main(String[] args) throws IOException {
-		args = new String[]{"script4.txt"};
+		Path[] scripts = Files.list(Paths.get("."))
+				.filter(p -> p.getFileName().toString().matches("script\\d.txt"))
+				.sorted()
+				.toArray(Path[]::new);
+
+		String mode = RUN_LATEST;
+//		String mode = RUN_ALL;
+
+		if (mode.equals(RUN_LATEST)) {
+			args = new String[]{scripts[scripts.length - 1].toString()};
+		} else if (mode.equals(RUN_ALL)) {
+			for (Path script : scripts) {
+				System.out.printf("script = %s%n", script);
+				runFile(script);
+			}			
+		}
+
 		if (args.length > 1) {
 			System.out.println("Usage: jlox [script]");
 		} else if (args.length == 1) {
@@ -64,10 +83,10 @@ public class Lox {
 		hadError = false;
 		Parser parser = new Parser(tokens);
 		List<Stmt> stmts = parser.parse();
-//		for (Stmt stmt : stmts) {
-//			System.out.println(stmt.accept(new AstPrinter()));
-//		}
-//		if (true) return;
+		if (hadError) return;
+
+		Resolver resolver = new Resolver(interpreter);
+		resolver.resolveBlock(stmts);
 		if (hadError) return;
 
 		hadError = false;
@@ -78,13 +97,13 @@ public class Lox {
 		report(line, "", msg);
 	}
 	
-	static void error(Token token, String msg) {
-		String details = token.getType() == TokenType.EOF ? " at end" : " at '" + token.getLexeme() + "'";
-		report(token.getLine(), details, msg);
+	public static void error(Token token, String msg) {
+		String location = token.getType() == TokenType.EOF ? " at end" : " at '" + token.getLexeme() + "'";
+		report(token.getLine(), location, msg);
 	}
 	
-	private static void report(int line, String where, String msg) {
-		System.err.println(String.format("[line %,d] Error%s: %s", line, where, msg));
+	private static void report(int line, String location, String msg) {
+		System.err.println(String.format("[line %,d] Error%s: %s", line, location, msg));
 		hadError = true;
 	}
 
