@@ -160,6 +160,9 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 			Lox.error(stmt.keyword, "return only allowed in functions");
 		}
 		if (stmt.value != null) {
+			if (enclosingFunction == FunctionType.INITIALIZER) {
+				Lox.error(stmt.keyword, "Cannot return a value from a constructor.");
+			}
 			resolve(stmt.value);
 		}
 		return null;
@@ -194,7 +197,8 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 		ClassType parent = this.enclosingClass;
 		this.enclosingClass = ClassType.CLASS;
 		for (Stmt.FunDecl method : stmt.methods) {
-			resolveFunction(method, FunctionType.METHOD);
+			boolean isConstructor = method.name.getLexeme().equals("init");
+			resolveFunction(method, isConstructor ? FunctionType.INITIALIZER : FunctionType.METHOD);
 		}
 		this.enclosingClass = parent;
 
@@ -242,7 +246,7 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 	}
 
 	private enum FunctionType {
-		NONE, FUNCTION, METHOD
+		NONE, FUNCTION, METHOD, INITIALIZER
 	}
 	private enum ClassType {
 		NONE, CLASS

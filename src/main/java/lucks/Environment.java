@@ -51,4 +51,8 @@ public class Environment {
 	public void assignAt(Integer distance, Token name, Object value) {
 		ancestor(distance).assign(name, value);
 	}
+
+	public Object get(String name) {
+		return data.get(name);
+	}
 }

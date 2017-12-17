@@ -200,12 +200,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	}
 
 	private Object callit(Expr.Call expr, LoxCallable callee) {
-		LoxCallable callable = callee;
-		if (callable.arity() != expr.arguments.size()) {
+		if (callee.arity() != expr.arguments.size()) {
 			throw error(expr.paren,
 			            String.format("Wrong number of arguments, when calling %s. " +
 							                          "Expected %s, was %s",
-			                          callable, callable.arity(), expr.arguments.size()));
+			                          callee, callee.arity(), expr.arguments.size()));
 		}
 
 		List<Object> argValues = new LinkedList<>();
@@ -213,7 +212,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 			argValues.add(evaluate(argument));
 		}
 
-		return callable.call(this, argValues);
+		return callee.call(this, argValues);
 	}
 
 	@Override
@@ -304,7 +303,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 		Map<String, LoxFunction> methods = new HashMap<>();
 		for (Stmt.FunDecl method : stmt.methods) {
 			String name = method.name.getLexeme();
-			methods.put(name, new LoxFunction(method, this.environment));
+			methods.put(name, new LoxFunction(method, this.environment, name.equals("init")));
 		}
 
 		this.environment.assign(stmt.name,

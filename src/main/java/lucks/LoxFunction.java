@@ -8,10 +8,16 @@ public class LoxFunction implements LoxCallable {
 
 	private final Stmt.FunDecl fun;
 	private final Environment environment;
+	private final boolean isConstructor;
 
 	public LoxFunction(Stmt.FunDecl stmt, Environment environment) {
-		this.fun = stmt;
+		this(stmt, environment, false);
+	}
+
+	public LoxFunction(Stmt.FunDecl method, Environment environment, boolean isConstructor) {
+		this.fun = method;
 		this.environment = environment;
+		this.isConstructor = isConstructor;
 	}
 
 	@Override
@@ -20,18 +26,22 @@ public class LoxFunction implements LoxCallable {
 	}
 
 	@Override
-	public Object call(Interpreter interpreter, List<Object> params) {
+	public Object call(Interpreter interpreter, List<Object> arguments) {
 		Environment callEnv = new Environment(environment);
-		for (int i = 0; i < params.size(); i++) {
-			callEnv.define(fun.parameters.get(i).getLexeme(), params.get(i));
+		for (int i = 0; i < arguments.size(); i++) {
+			callEnv.define(fun.parameters.get(i).getLexeme(), arguments.get(i));
 		}
 
+		Object resultValue = null;
 		try {
 			interpreter.executeBlock(fun.body, callEnv);
-			return null;
 		} catch (Return ret) {
-			return ret.getVal();
+			resultValue = ret.getVal();
 		}
+		if (isConstructor()) {
+			resultValue = environment.get("this");
+		}
+		return resultValue;
 	}
 
 	@Override
@@ -42,6 +52,10 @@ public class LoxFunction implements LoxCallable {
 	public LoxFunction bind(LoxInstance loxInstance) {
 		Environment environment = new Environment(this.environment);
 		environment.define("this", loxInstance);
-		return new LoxFunction(fun, environment);
+		return new LoxFunction(fun, environment, isConstructor);
+	}
+
+	public boolean isConstructor() {
+		return isConstructor;
 	}
 }

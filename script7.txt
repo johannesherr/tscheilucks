@@ -1,8 +1,17 @@
 
 class Foo {
+
+  init(default) {
+    print "constr called";
+    this.default = default;
+  }
+
   say(finish) {
+    var default1 = this.default;
     class Inner {
-      msg() { return "Hi " + this.receiver + finish; }
+      msg() {
+        return "Hi " + (this.receiver or default1) + finish;
+      }
     }
 
     fun helper() {
@@ -10,16 +19,13 @@ class Foo {
     }
 
     var in = Inner();
-    in.receiver = this.name;
+    in.receiver = this.name or this.default;
     //print "Hello " + this.name + "!";
     print in.msg();
   }
 }
 
-var o = Foo();
-//o.foo = Foo();
-//o.foo.x = 34 + 1;
-//print o.foo.x;
+var o = Foo("world");
 
 o.name = "Franz";
 var x = o.say;
@@ -32,4 +38,11 @@ var other = Empty();
 other.hoho = o.say;
 print o.name = "you";
 other.hoho("!");
+
+o.name = false;
+o.say("!");
+
+var next = o.init("guys and gurls");
+next.say("!");
+
 
