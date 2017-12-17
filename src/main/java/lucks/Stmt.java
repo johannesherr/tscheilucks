@@ -156,6 +156,25 @@ public abstract class Stmt {
 		}
 	}
 
+	public static class Class extends Stmt {
+		public final Token name;
+		public final List<FunDecl> methods;
+
+		public Class(Token name, List<FunDecl> methods) {
+			this.name = name;
+			this.methods = methods;
+		}
+
+		public <T> T accept(Stmt.Visitor<T> visitor) {
+			return visitor.visitClass(this);
+		}
+
+		@Override
+		public String toString() {
+			return "Class{" + "name=" + name + ", " + "methods=" + methods + "}";
+		}
+	}
+
 
 	public interface Visitor<T> {
 		T visitExpression(Stmt.Expression stmt);
@@ -166,5 +185,6 @@ public abstract class Stmt {
 		T visitReturn(Stmt.Return stmt);
 		T visitIf(Stmt.If stmt);
 		T visitWhile(Stmt.While stmt);
+		T visitClass(Stmt.Class stmt);
 	}
 }

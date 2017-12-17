@@ -118,6 +118,44 @@ public abstract class Expr {
 		}
 	}
 
+	public static class Set extends Expr {
+		public final Expr object;
+		public final Token name;
+		public final Expr value;
+
+		public Set(Expr object, Token name, Expr value) {
+			this.object = object;
+			this.name = name;
+			this.value = value;
+		}
+
+		public <T> T accept(Expr.Visitor<T> visitor) {
+			return visitor.visitSet(this);
+		}
+
+		@Override
+		public String toString() {
+			return "Set{" + "object=" + object + ", " + "name=" + name + ", " + "value=" + value + "}";
+		}
+	}
+
+	public static class This extends Expr {
+		public final Token keyword;
+
+		public This(Token keyword) {
+			this.keyword = keyword;
+		}
+
+		public <T> T accept(Expr.Visitor<T> visitor) {
+			return visitor.visitThis(this);
+		}
+
+		@Override
+		public String toString() {
+			return "This{" + "keyword=" + keyword + "}";
+		}
+	}
+
 
 	public interface Visitor<T> {
 		T visitBinary(Expr.Binary expr);
@@ -126,5 +164,7 @@ public abstract class Expr {
 		T visitVariable(Expr.Variable expr);
 		T visitGrouping(Expr.Grouping expr);
 		T visitCall(Expr.Call expr);
+		T visitSet(Expr.Set expr);
+		T visitThis(Expr.This expr);
 	}
 }

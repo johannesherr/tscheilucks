@@ -9,7 +9,9 @@ import java.util.Objects;
 import lucks.Environment;
 import lucks.Expr;
 import lucks.LoxCallable;
+import lucks.LoxClass;
 import lucks.LoxFunction;
+import lucks.LoxInstance;
 import lucks.Return;
 import lucks.RuntimeError;
 import lucks.Stmt;
@@ -81,6 +83,23 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 				globals.assign(varName, value);
 			}
 			return value;
+		}
+
+		if (opType == TokenType.DOT) {
+			if (!(left instanceof LoxInstance)) {
+				throw new RuntimeError(expr.operator, "Only instances have fields.");
+			}
+
+			if (expr.right instanceof Expr.Variable) {
+				Expr.Variable variable = (Expr.Variable) expr.right;
+				return ((LoxInstance) left).get(variable.name);
+			}
+			if (expr.right instanceof Expr.Call) {
+				Expr.Call call = (Expr.Call) expr.right;
+				LoxCallable callable = (LoxCallable) ((LoxInstance) left).get(((Expr.Variable) call.callee).name);
+				return callit(call, callable);
+			}
+			throw new RuntimeError(expr.operator, "Only names can be fields.");
 		}
 		
 		Object right = evaluate(expr.right);
@@ -177,7 +196,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 			throw error(expr.paren, "Can only call functions and classes.");
 		}
 
-		LoxCallable callable = (LoxCallable) callee;
+		return callit(expr, (LoxCallable) callee);
+	}
+
+	private Object callit(Expr.Call expr, LoxCallable callee) {
+		LoxCallable callable = callee;
 		if (callable.arity() != expr.arguments.size()) {
 			throw error(expr.paren,
 			            String.format("Wrong number of arguments, when calling %s. " +
@@ -191,6 +214,23 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 		}
 
 		return callable.call(this, argValues);
+	}
+
+	@Override
+	public Object visitSet(Expr.Set expr) {
+		Object obj = evaluate(expr.object);
+		if (!(obj instanceof LoxInstance)) {
+			throw new RuntimeError(expr.name, "Only instances have fields.");
+		}
+		LoxInstance instance = (LoxInstance) obj;
+		Object value = evaluate(expr.value);
+		instance.put(expr.name, value);
+		return value;
+	}
+
+	@Override
+	public Object visitThis(Expr.This expr) {
+		return environment.getAt(expr.keyword, locals.get(expr.keyword));
 	}
 
 	@Override
@@ -253,6 +293,24 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 		while (isTruthy(evaluate(stmt.cond))) {
 			execute(stmt.body);
 		}
+		return null;
+	}
+
+	@Override
+	public Void visitClass(Stmt.Class stmt) {
+
+		environment.define(stmt.name.getLexeme(), null);
+
+		Map<String, LoxFunction> methods = new HashMap<>();
+		for (Stmt.FunDecl method : stmt.methods) {
+			String name = method.name.getLexeme();
+			methods.put(name, new LoxFunction(method, this.environment));
+		}
+
+		this.environment.assign(stmt.name,
+		                        new LoxClass(stmt.name.getLexeme(),
+		                                     methods
+		                        ));
 		return null;
 	}
 

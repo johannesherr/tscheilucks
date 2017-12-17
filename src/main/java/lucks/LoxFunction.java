@@ -38,4 +38,10 @@ public class LoxFunction implements LoxCallable {
 	public String toString() {
 		return String.format("<fun %s>", fun.name.getLexeme());
 	}
+
+	public LoxFunction bind(LoxInstance loxInstance) {
+		Environment environment = new Environment(this.environment);
+		environment.define("this", loxInstance);
+		return new LoxFunction(fun, environment);
+	}
 }

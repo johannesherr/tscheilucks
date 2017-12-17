@@ -1,0 +1,35 @@
+
+class Foo {
+  say(finish) {
+    class Inner {
+      msg() { return "Hi " + this.receiver + finish; }
+    }
+
+    fun helper() {
+      return this;
+    }
+
+    var in = Inner();
+    in.receiver = this.name;
+    //print "Hello " + this.name + "!";
+    print in.msg();
+  }
+}
+
+var o = Foo();
+//o.foo = Foo();
+//o.foo.x = 34 + 1;
+//print o.foo.x;
+
+o.name = "Franz";
+var x = o.say;
+x("!");
+o.name = "Max";
+o.say("!");
+
+class Empty {}
+var other = Empty();
+other.hoho = o.say;
+print o.name = "you";
+other.hoho("!");
+

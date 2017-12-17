@@ -28,6 +28,7 @@ public class Parser {
 						{LESS, LESS_EQUAL, GREATER_EQUAL, GREATER},
 						{MINUS, PLUS},
 						{STAR, SLASH},
+						{DOT}
 						// grouping
 		};
 
@@ -67,6 +68,7 @@ public class Parser {
 		try {
 			if (match(VAR)) return varDeclaration();
 			else if (match(FUN)) return funDeclaration("function");
+			else if (match(CLASS)) return classDeclaration();
 			else return statement();
 		} catch (ParseError error) {
 			synchronize();
@@ -86,7 +88,19 @@ public class Parser {
 		return new Stmt.Var(name, initializer);
 	}
 
-	private Stmt funDeclaration(String kind) {
+	private Stmt classDeclaration() {
+		Token className = consume(IDENTIFIER, " class name expected");
+		consume(LEFT_BRACE, " before class body");
+
+		List<Stmt.FunDecl> methods = new LinkedList<>();
+		while (!match(RIGHT_BRACE)) {
+			methods.add(funDeclaration("method"));
+		}
+
+		return new Stmt.Class(className, methods);
+	}
+
+	private Stmt.FunDecl funDeclaration(String kind) {
 		Token name = consume(IDENTIFIER, " for " + kind);
 
 		consume(LEFT_PAREN);
@@ -232,14 +246,22 @@ public class Parser {
 				break;
 
 			if (opType == EQUAL) {
-				if (!(expr instanceof Expr.Variable)) {
+				if (!(expr instanceof Expr.Variable) &&
+								!(expr instanceof Expr.Binary && ((Expr.Binary) expr).right instanceof Expr.Variable)) {
 					throw error(peek(), "Left hand side of assignment must be a l-value.");
 				}
 			}
 
-			expr = new Expr.Binary(expr, advance(), expression(nextPrio));
+			Token operator = advance();
+			Expr rhs = expression(nextPrio);
+			if (opType == EQUAL && expr instanceof Expr.Binary && ((Expr.Binary) expr).right instanceof Expr.Variable) {
+				Expr.Binary lhs = (Expr.Binary) expr;
+				expr = new Expr.Set(lhs.left, ((Expr.Variable) lhs.right).name, rhs);
+			} else {
+				expr = new Expr.Binary(expr, operator, rhs);
+			}
 		}
-
+		
 		return expr;
 	}
 
@@ -284,6 +306,7 @@ public class Parser {
 		if (match(TRUE)) return new Expr.Literal(true);
 		if (match(FALSE)) return new Expr.Literal(false);
 		if (match(NIL)) return new Expr.Literal(null);
+		if (match(THIS)) return new Expr.This(previous());
 
 		if (match(NUMBER, STRING)) {
 			return new Expr.Literal(previous().getLiteral());

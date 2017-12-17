@@ -16,6 +16,7 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 	private final ArrayDeque<Map<String, Boolean>> scopes = new ArrayDeque<>();
 	private final Interpreter interpreter;
 	private FunctionType enclosingFunction = FunctionType.NONE;
+	private ClassType enclosingClass = ClassType.NONE;
 
 	public Resolver(Interpreter interpreter) {
 		this.interpreter = interpreter;
@@ -79,6 +80,22 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 	}
 
 	@Override
+	public Void visitSet(Expr.Set expr) {
+		resolve(expr.object);
+		resolve(expr.value);
+		return null;
+	}
+
+	@Override
+	public Void visitThis(Expr.This expr) {
+		if (enclosingClass != ClassType.CLASS) {
+			Lox.error(expr.keyword, "this is only allowed in methods");
+		}
+		resolveLocal(expr.keyword);
+		return null;
+	}
+
+	@Override
 	public Void visitExpression(Stmt.Expression stmt) {
 		resolve(stmt.expression);
 		return null;
@@ -110,31 +127,31 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 
 	@Override
 	public Void visitFunDecl(Stmt.FunDecl stmt) {
-		FunctionType parent = this.enclosingFunction;
-		try {
-			enclosingFunction = FunctionType.FUNCTION;
+		declare(stmt.name);
+		define(stmt.name);
 
-			declare(stmt.name);
-			define(stmt.name);
-
-			resolveFunction(stmt);
-
-		} finally {
-			enclosingFunction = parent;
-		}
+		resolveFunction(stmt, FunctionType.FUNCTION);
 
 		return null;
 	}
 
-	private void resolveFunction(Stmt.FunDecl stmt) {
-		enterScope();
-		for (Token parameter : stmt.parameters) {
-			declare(parameter);
-			define(parameter);
-		}
+	private void resolveFunction(Stmt.FunDecl stmt, FunctionType functionType) {
+		FunctionType parent = this.enclosingFunction;
+		try {
+			enclosingFunction = functionType;
 
-		resolveBlock(stmt.body);
-		exitScope();
+			enterScope();
+			for (Token parameter : stmt.parameters) {
+				declare(parameter);
+				define(parameter);
+			}
+
+			resolveBlock(stmt.body);
+			exitScope();
+
+		} finally {
+			enclosingFunction = parent;
+		}
 	}
 
 	@Override
@@ -162,6 +179,26 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 	public Void visitWhile(Stmt.While stmt) {
 		resolve(stmt.cond);
 		resolve(stmt.body);
+
+		return null;
+	}
+
+	@Override
+	public Void visitClass(Stmt.Class stmt) {
+		declare(stmt.name);
+		define(stmt.name);
+
+		enterScope();
+		scopes.peekLast().put("this", true);
+
+		ClassType parent = this.enclosingClass;
+		this.enclosingClass = ClassType.CLASS;
+		for (Stmt.FunDecl method : stmt.methods) {
+			resolveFunction(method, FunctionType.METHOD);
+		}
+		this.enclosingClass = parent;
+
+		exitScope();
 
 		return null;
 	}
@@ -205,6 +242,9 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 	}
 
 	private enum FunctionType {
-		NONE, FUNCTION
+		NONE, FUNCTION, METHOD
+	}
+	private enum ClassType {
+		NONE, CLASS
 	}
 }
