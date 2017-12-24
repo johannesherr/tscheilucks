@@ -85,6 +85,7 @@ public class Parser {
 
 	private Stmt classDeclaration() {
 		Token className = consume(IDENTIFIER, " class name expected");
+
 		Token superClass = null;
 		if (match(TokenType.LESS)) {
 			superClass = consume(TokenType.IDENTIFIER);
@@ -272,12 +273,8 @@ public class Parser {
 	private Expr call() {
 		Expr expr = primary();
 
-		while (true) {
-			if (match(LEFT_PAREN)) {
-				expr = finishCall(expr);
-			} else {
-				break;
-			}
+		while (match(LEFT_PAREN)) {
+			expr = finishCall(expr);
 		}
 		
 		return expr;
@@ -315,6 +312,13 @@ public class Parser {
 			Expr expr = expression(0);
 			consume(RIGHT_PAREN);
 			return new Expr.Grouping(expr);
+		}
+
+		if (match(SUPER)) {
+			Token keyword = previous();
+			consume(DOT);
+			Token name = consume(IDENTIFIER);
+			return new Expr.Super(keyword, name);
 		}
 
 		if (match(IDENTIFIER)) {

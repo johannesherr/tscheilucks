@@ -1,7 +1,7 @@
 
 class Foo {
   say() {
-    print "42";
+    print "hi my name is " + this.name;
   }
 }
 
@@ -11,13 +11,32 @@ class Bar < Foo {
   }
 
   say() {
-    //super.say();
+    super.say();
     print "yep";
   }
 }
 
+
 var b = Bar();
+b.name = "Max";
 b.hoho();
 b.say();
 
+print "";
+print "";
 
+class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
+  }
+}
+
+class BostonCream < Doughnut {
+  cook() {
+    var m = super.cook;
+    m();
+    print "Pipe full of custard and coat with chocolate.";
+  }
+}
+
+BostonCream().cook();

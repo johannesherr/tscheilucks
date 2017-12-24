@@ -39,6 +39,10 @@ public class Environment {
 		throw new RuntimeError(name, String.format("Undefined variable '%s'.", identifier));
 	}
 
+	public Object get(String name) {
+		return data.get(name);
+	}
+
 	private Environment ancestor(Integer distance) {
 		if (distance == 0) return this;
 		else return enclosing.ancestor(distance - 1);
@@ -48,11 +52,11 @@ public class Environment {
 		return ancestor(distance).get(name);
 	}
 
-	public void assignAt(Integer distance, Token name, Object value) {
-		ancestor(distance).assign(name, value);
+	public Object getAt(String name, Integer distance) {
+		return ancestor(distance).get(name);
 	}
 
-	public Object get(String name) {
-		return data.get(name);
+	public void assignAt(Integer distance, Token name, Object value) {
+		ancestor(distance).assign(name, value);
 	}
 }

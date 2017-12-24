@@ -26,9 +26,9 @@ public class LoxInstance {
 			return val;
 		}
 
-		LoxFunction method = loxClass.findMethod(field);
+		LoxFunction method = loxClass.findMethod(this, field);
 		if (method != null) {
-			return method.bind(this);
+			return method;
 		}
 
 		throw new RuntimeError(name, "Undefined property: " + field);

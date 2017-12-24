@@ -27,7 +27,8 @@ public class GenAst {
 						"Grouping: Expr expr",
 						"Call: Expr callee, Token paren, List<Expr> arguments",
 						"Set: Expr object, Token name, Expr value",
-						"This: Token keyword"
+						"This: Token keyword",
+						"Super: Token zuper, Token name"
 		));
 
 		List<Clazz> stmtClasses = createAST("Stmt", asList(

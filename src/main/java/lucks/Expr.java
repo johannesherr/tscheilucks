@@ -156,6 +156,25 @@ public abstract class Expr {
 		}
 	}
 
+	public static class Super extends Expr {
+		public final Token zuper;
+		public final Token name;
+
+		public Super(Token zuper, Token name) {
+			this.zuper = zuper;
+			this.name = name;
+		}
+
+		public <T> T accept(Expr.Visitor<T> visitor) {
+			return visitor.visitSuper(this);
+		}
+
+		@Override
+		public String toString() {
+			return "Super{" + "zuper=" + zuper + ", " + "name=" + name + "}";
+		}
+	}
+
 
 	public interface Visitor<T> {
 		T visitBinary(Expr.Binary expr);
@@ -166,5 +185,6 @@ public abstract class Expr {
 		T visitCall(Expr.Call expr);
 		T visitSet(Expr.Set expr);
 		T visitThis(Expr.This expr);
+		T visitSuper(Expr.Super expr);
 	}
 }

@@ -49,14 +49,11 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 
 	private void resolveLocal(Token name) {
 		Iterator<Map<String, Boolean>> iterator = scopes.descendingIterator();
-		// TODO [JH]: for loop?
-		int cnt = 0;
-		while (iterator.hasNext()) {
+		for (int cnt = 0; iterator.hasNext(); cnt++) {
 			if (iterator.next().containsKey(name.getLexeme())) {
 				interpreter.resolve(name, cnt);
 				return;
 			}
-			cnt++;
 		}
 	}
 
@@ -85,10 +82,22 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 
 	@Override
 	public Void visitThis(Expr.This expr) {
-		if (enclosingClass != ClassType.CLASS) {
+		if (enclosingClass == ClassType.NONE) {
 			Lox.error(expr.keyword, "this is only allowed in methods");
 		}
 		resolveLocal(expr.keyword);
+		return null;
+	}
+
+	@Override
+	public Void visitSuper(Expr.Super expr) {
+		if (enclosingClass == ClassType.NONE) {
+			Lox.error(expr.zuper, "Cannot use 'super' outside of a class.");
+		}
+		if (enclosingClass == ClassType.CLASS) {
+			Lox.error(expr.zuper, "Cannot use 'super' in a class with no superclass.");
+		}
+		resolveLocal(expr.zuper);
 		return null;
 	}
 
@@ -191,13 +200,13 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 		Token superClass = stmt.superClass;
 		if (superClass != null) {
 			resolveLocal(superClass);
+			enterScope().put("super", true);
 		}
 
-		enterScope();
-		scopes.peekLast().put("this", true);
+		enterScope().put("this", true);
 
 		ClassType parent = this.enclosingClass;
-		this.enclosingClass = ClassType.CLASS;
+		this.enclosingClass = superClass != null ? ClassType.SUBCLASS : ClassType.CLASS;
 		for (Stmt.FunDecl method : stmt.methods) {
 			boolean isConstructor = method.name.getLexeme().equals("init");
 			resolveFunction(method, isConstructor ? FunctionType.INITIALIZER : FunctionType.METHOD);
@@ -205,6 +214,8 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 		this.enclosingClass = parent;
 
 		exitScope();
+
+		if (superClass != null) exitScope();
 
 		return null;
 	}
@@ -223,8 +234,10 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 		expr.accept(this);
 	}
 
-	private void enterScope() {
-		scopes.addLast(new HashMap<>());
+	private HashMap<String, Boolean> enterScope() {
+		HashMap<String, Boolean> scope = new HashMap<>();
+		scopes.addLast(scope);
+		return scope;
 	}
 
 	private void exitScope() {
@@ -251,6 +264,6 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 		NONE, FUNCTION, METHOD, INITIALIZER
 	}
 	private enum ClassType {
-		NONE, CLASS
+		NONE, SUBCLASS, CLASS
 	}
 }
