@@ -1,18 +1,20 @@
 package lucks;
 
+import lucks.visitors.Interpreter;
+
 import java.util.List;
 import java.util.Map;
-
-import lucks.visitors.Interpreter;
 
 public class LoxClass implements LoxCallable {
 
 	private final String name;
+	private final LoxClass superClass;
 	private final Map<String, LoxFunction> methods;
 	private final LoxFunction constructor;
 
-	public LoxClass(String name, Map<String, LoxFunction> methods) {
+	public LoxClass(String name, LoxClass superClass, Map<String, LoxFunction> methods) {
 		this.name = name;
+		this.superClass = superClass;
 		this.methods = methods;
 		this.constructor = methods.values().stream()
 						.filter(LoxFunction::isConstructor)
@@ -43,6 +45,15 @@ public class LoxClass implements LoxCallable {
 
 
 	public LoxFunction findMethod(String name) {
-		return methods.get(name);
+		LoxFunction loxFunction = methods.get(name);
+		if (loxFunction != null) {
+			return loxFunction;
+		}
+
+		if (superClass != null) {
+			return superClass.findMethod(name);
+		}
+
+		return null;
 	}
 }

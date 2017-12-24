@@ -1,15 +1,11 @@
 package lucks.visitors;
 
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import lucks.Expr;
 import lucks.Lox;
 import lucks.Stmt;
 import lucks.Token;
+
+import java.util.*;
 
 public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 
@@ -53,6 +49,7 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 
 	private void resolveLocal(Token name) {
 		Iterator<Map<String, Boolean>> iterator = scopes.descendingIterator();
+		// TODO [JH]: for loop?
 		int cnt = 0;
 		while (iterator.hasNext()) {
 			if (iterator.next().containsKey(name.getLexeme())) {
@@ -190,6 +187,11 @@ public class Resolver implements Stmt.Visitor<Void>, Expr.Visitor<Void> {
 	public Void visitClass(Stmt.Class stmt) {
 		declare(stmt.name);
 		define(stmt.name);
+
+		Token superClass = stmt.superClass;
+		if (superClass != null) {
+			resolveLocal(superClass);
+		}
 
 		enterScope();
 		scopes.peekLast().put("this", true);

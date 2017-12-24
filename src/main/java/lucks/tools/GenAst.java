@@ -1,6 +1,6 @@
 package lucks.tools;
 
-import static java.util.Arrays.asList;
+import com.google.common.base.Joiner;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Joiner;
+import static java.util.Arrays.asList;
 
 /**
  * @author Johannes Herr
@@ -39,7 +39,7 @@ public class GenAst {
 						"Return: Token keyword, Expr value",
 						"If: Expr cond, Stmt thenBranch, Stmt elseBranch",
 						"While: Expr cond, Stmt body",
-						"Class: Token name, List<FunDecl> methods"
+						"Class: Token name, Token superClass, List<FunDecl> methods"
 		));
 	}
 

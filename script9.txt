@@ -1,0 +1,23 @@
+
+class Foo {
+  say() {
+    print "42";
+  }
+}
+
+class Bar < Foo {
+  hoho() {
+    print "ho";
+  }
+
+  say() {
+    //super.say();
+    print "yep";
+  }
+}
+
+var b = Bar();
+b.hoho();
+b.say();
+
+

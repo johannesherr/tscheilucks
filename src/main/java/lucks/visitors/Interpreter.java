@@ -1,22 +1,8 @@
 package lucks.visitors;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import lucks.*;
 
-import lucks.Environment;
-import lucks.Expr;
-import lucks.LoxCallable;
-import lucks.LoxClass;
-import lucks.LoxFunction;
-import lucks.LoxInstance;
-import lucks.Return;
-import lucks.RuntimeError;
-import lucks.Stmt;
-import lucks.Token;
-import lucks.TokenType;
+import java.util.*;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
@@ -175,12 +161,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 	}
 
 	private Object lookupVariable(Expr.Variable expr) {
-		Integer distance = locals.get(expr.name);
+		return lookupToken(expr.name);
+	}
+
+	private Object lookupToken(Token token) {
+		Integer distance = locals.get(token);
 
 		if (distance != null) {
-			return environment.getAt(expr.name, distance);
+			return environment.getAt(token, distance);
 		} else {
-			return globals.get(expr.name);
+			return globals.get(token);
 		}
 	}
 
@@ -297,7 +287,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
 	@Override
 	public Void visitClass(Stmt.Class stmt) {
-
 		environment.define(stmt.name.getLexeme(), null);
 
 		Map<String, LoxFunction> methods = new HashMap<>();
@@ -305,11 +294,15 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 			String name = method.name.getLexeme();
 			methods.put(name, new LoxFunction(method, this.environment, name.equals("init")));
 		}
+		Token superClass = stmt.superClass;
+		LoxClass zuper = null;
+		if (superClass != null) {
+			zuper = (LoxClass) lookupToken(superClass);
+		}
 
-		this.environment.assign(stmt.name,
-		                        new LoxClass(stmt.name.getLexeme(),
-		                                     methods
-		                        ));
+		LoxClass loxClass = new LoxClass(stmt.name.getLexeme(), zuper, methods);
+		this.environment.assign(stmt.name, loxClass);
+
 		return null;
 	}
 

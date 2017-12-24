@@ -1,17 +1,12 @@
 package lucks;
 
-import static java.util.Arrays.asList;
-import static lucks.TokenType.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
+import java.util.*;
+
+import static java.util.Arrays.asList;
+import static lucks.TokenType.*;
 
 public class Parser {
 
@@ -90,6 +85,10 @@ public class Parser {
 
 	private Stmt classDeclaration() {
 		Token className = consume(IDENTIFIER, " class name expected");
+		Token superClass = null;
+		if (match(TokenType.LESS)) {
+			superClass = consume(TokenType.IDENTIFIER);
+		}
 		consume(LEFT_BRACE, " before class body");
 
 		List<Stmt.FunDecl> methods = new LinkedList<>();
@@ -97,7 +96,7 @@ public class Parser {
 			methods.add(funDeclaration("method"));
 		}
 
-		return new Stmt.Class(className, methods);
+		return new Stmt.Class(className, superClass, methods);
 	}
 
 	private Stmt.FunDecl funDeclaration(String kind) {

@@ -158,10 +158,12 @@ public abstract class Stmt {
 
 	public static class Class extends Stmt {
 		public final Token name;
+		public final Token superClass;
 		public final List<FunDecl> methods;
 
-		public Class(Token name, List<FunDecl> methods) {
+		public Class(Token name, Token superClass, List<FunDecl> methods) {
 			this.name = name;
+			this.superClass = superClass;
 			this.methods = methods;
 		}
 
@@ -171,7 +173,7 @@ public abstract class Stmt {
 
 		@Override
 		public String toString() {
-			return "Class{" + "name=" + name + ", " + "methods=" + methods + "}";
+			return "Class{" + "name=" + name + ", " + "superClass=" + superClass + ", " + "methods=" + methods + "}";
 		}
 	}
 
